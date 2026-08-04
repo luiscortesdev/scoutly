@@ -1,5 +1,11 @@
+-- Enums
 CREATE TYPE gender_type as ENUM ("men", "women")
+CREATE TYPE division_type AS ENUM ("ncaa_d1", "ncaa_d2", "ncaa_d3", "naia", "njcaa");
+CREATE TYPE user_role_type AS ENUM ("best_player", "travel_squad", "redshirt_freshman", "walk_on");
+CREATE TYPE school_type_enum AS ENUM ("public", "private_nonprofit", "private_forprofit");
+CREATE TYPE climate_type AS ENUM ("warm", "moderate", "cold");
 
+-- Table Schemas
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -27,15 +33,35 @@ CREATE TABLE users (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 )
 
-create table saved_matches (
-
-)
-
 create table user_search_preferences (
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    
+    -- enums
+    divisions division_type[] NOT NULL,
+    user_role_desire user_role_type NOT NULL, -- What role the player wants on the team
+    school_type school_type_enum NOT NULL,
+    climate climate_type NOT NULL,
 
+    -- regular values
+    program_rank INT NOT NULL, -- minimum program rank
+    academic_rigor TEXT NOT NULL,
+    min_act INT NOT NULL,
+    min_sat INT NOT NULL,
+    user_test_score_tolerance INT NOT NULL, -- how strict the user is about minimum test scores
+    max_distance INT NOT NULL,
+
+    -- based on college scorecard numbering
+    preferred_regions INT[] NOT NULL,
+    school_size INT[] NOT NULL,
+    school_setting INT[] NOT NULL,
 )
 
 create table user_events (
+    
+)
+
+create table saved_matches (
 
 )
 
@@ -48,5 +74,5 @@ create table college_players (
 )
 
 create table college_programs (
-    
+
 )
