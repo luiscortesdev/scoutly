@@ -1,3 +1,4 @@
+-- Enums
 CREATE TYPE gender_type as ENUM ('men', 'women');
 CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
 CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_freshman', 'walk_on');
@@ -6,6 +7,7 @@ CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
 CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national');
 CREATE TYPE recruiting_tier_type AS ENUM ('reach', 'target', 'safety', 'undecided');
 
+-- Tables
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -29,7 +31,6 @@ CREATE TABLE users (
     home_course VARCHAR(255) NULL,
     latitude NUMERIC(9,6) NULL,
     longitude NUMERIC(9,6) NULL,
-    scoring_avg NUMERIC(6, 3) NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -180,3 +181,19 @@ CREATE TABLE colleges (
     median_earnings_9yrs INT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+-- Views
+CREATE OR REPLACE VIEW user_scoring_averages AS
+WITH individual_rounds AS (
+    SELECT 
+        user_id,
+        unnest(scores) AS score
+    FROM user_events
+)
+SELECT 
+    user_id,
+    COUNT(score) AS total_rounds_played,
+    MIN(score) AS personal_best,
+    ROUND(AVG(score), 2) AS lifetime_scoring_avg
+FROM individual_rounds
+GROUP BY user_id;
