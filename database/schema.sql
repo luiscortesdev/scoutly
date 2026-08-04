@@ -140,4 +140,4 @@ CREATE TABLE saved_matches (
     notes TEXT NULL
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT unique_user_program UNIQUE (user_id, program_id)
-)
+);
