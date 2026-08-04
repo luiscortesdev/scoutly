@@ -24,7 +24,7 @@ CREATE TABLE users (
     lat NUMERIC(9,6) NULL,
     lon NUMERIC(9,6) NULL,
     scoring_avg NUMERIC(6, 3) NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
@@ -54,7 +54,7 @@ CREATE TABLE user_search_preferences (
     preferred_regions INT[] NOT NULL,
     school_size INT[] NOT NULL,
     school_setting INT[] NOT NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national')
@@ -72,7 +72,7 @@ CREATE TABLE user_events (
     finish INT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TABLE programs (
@@ -89,7 +89,7 @@ CREATE TABLE programs (
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TABLE program_events (
@@ -104,7 +104,7 @@ CREATE TABLE program_events (
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
     start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
     end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TABLE players (
@@ -122,7 +122,7 @@ CREATE TABLE players (
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
     graduation_year VARCHAR(10) NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TABLE player_events (
@@ -137,7 +137,7 @@ CREATE TABLE player_events (
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
     start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
     end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
 CREATE TABLE saved_matches (
