@@ -1,6 +1,6 @@
 CREATE TYPE gender_type as ENUM ("men", "women")
 
-CREATE TABLE user_profiles (
+CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(500) NOT NULL,
@@ -25,4 +25,28 @@ CREATE TABLE user_profiles (
     lon NUMERIC(9,6) NULL,
     scoring_avg NUMERIC(6, 3) NULL,
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+)
+
+create table saved_matches (
+
+)
+
+create table user_search_preferences (
+
+)
+
+create table user_events (
+
+)
+
+create table college_events (
+
+)
+
+create table college_players (
+
+)
+
+create table college_programs (
+    
 )
