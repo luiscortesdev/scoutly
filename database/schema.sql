@@ -4,6 +4,7 @@ CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_fre
 CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_forprofit');
 CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
 CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national');
+CREATE TYPE recruiting_tier_type AS ENUM ('reach', 'target', 'safety', 'undecided');
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -132,5 +133,11 @@ CREATE TABLE player_events (
 );
 
 CREATE TABLE saved_matches (
-
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+    tier recruiting_tier_type NOT NULL DEFAULT 'undecided',
+    notes TEXT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT unique_user_program UNIQUE (user_id, program_id)
 )
