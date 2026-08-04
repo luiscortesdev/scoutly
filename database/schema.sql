@@ -70,6 +70,49 @@ CREATE TABLE user_events (
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+CREATE TABLE colleges (
+    unit_id INT PRIMARY KEY, -- Unique ID from the DOE
+    opeid VARCHAR(50) NULL,
+    opeid6 VARCHAR(50) NULL,
+    name VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    state CHAR(2) NOT NULL,
+    zip VARCHAR(20) NOT NULL,
+    accreditation_agency VARCHAR(255) NULL,
+    institution_url VARCHAR(255) NULL,
+    net_price_calculator_url VARCHAR(255) NULL,
+    is_main_campus BOOLEAN NULL,
+    region INT NULL,
+    locale INT NULL,
+    latitude NUMERIC(9,6) NULL,
+    longitude NUMERIC(9,6) NULL,
+    admissions_rate NUMERIC(4,2) NULL,
+    
+    sat_reading_25th INT NULL,
+    sat_reading_75th INT NULL,
+    sat_reading_50th INT NULL,
+    sat_math_25th INT NULL,
+    sat_math_75th INT NULL,
+    sat_math_50th INT NULL,
+    sat_total_25th INT NULL,
+    sat_total_75th INT NULL,
+    sat_total_50th INT NULL,
+    sat_avg INT NULL,
+    
+    act_25th INT NULL,
+    act_75th INT NULL,
+    act_50th INT NULL,
+    
+    undergrad_size INT NULL,
+    graduate_size INT NULL,
+    in_state_tuition INT NULL,
+    out_of_state_tuition INT NULL,
+    school_type VARCHAR(100) NULL,
+    address VARCHAR(500) NULL,
+    median_earnings_9yrs INT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     college_id INT NOT NULL REFERENCES colleges(unit_id) ON DELETE CASCADE,
@@ -134,52 +177,9 @@ CREATE TABLE saved_matches (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     program_id UUID NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
     tier recruiting_tier_type NOT NULL DEFAULT 'undecided',
-    notes TEXT NULL
+    notes TEXT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT unique_user_program UNIQUE (user_id, program_id)
-);
-
-CREATE TABLE colleges (
-    unit_id INT PRIMARY KEY, -- Unique ID from the DOE
-    opeid VARCHAR(50) NULL,
-    opeid6 VARCHAR(50) NULL,
-    name VARCHAR(255) NOT NULL,
-    city VARCHAR(100) NOT NULL,
-    state CHAR(2) NOT NULL,
-    zip VARCHAR(20) NOT NULL,
-    accreditation_agency VARCHAR(255) NULL,
-    institution_url VARCHAR(255) NULL,
-    net_price_calculator_url VARCHAR(255) NULL,
-    is_main_campus BOOLEAN NULL,
-    region INT NULL,
-    locale INT NULL,
-    latitude NUMERIC(9,6) NULL,
-    longitude NUMERIC(9,6) NULL,
-    admissions_rate NUMERIC(4,2) NULL,
-    
-    sat_reading_25th INT NULL,
-    sat_reading_75th INT NULL,
-    sat_reading_50th INT NULL,
-    sat_math_25th INT NULL,
-    sat_math_75th INT NULL,
-    sat_math_50th INT NULL,
-    sat_total_25th INT NULL,
-    sat_total_75th INT NULL,
-    sat_total_50th INT NULL,
-    sat_avg INT NULL,
-    
-    act_25th INT NULL,
-    act_75th INT NULL,
-    act_50th INT NULL,
-    
-    undergrad_size INT NULL,
-    graduate_size INT NULL,
-    in_state_tuition INT NULL,
-    out_of_state_tuition INT NULL,
-    school_type VARCHAR(100) NULL,
-    address VARCHAR(500) NULL,
-    median_earnings_9yrs INT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 -- Views
