@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: scoutly_postgres_db
+    restart: unless-stopped
+    
+    # Isolate database from the host network
+    ports:
+      - "127.0.0.1:5432:5432"
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: scoutly
+      
+      # Defend against Alpine's musl collation anomalies
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    # Prevent backend startup race conditions
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  pgdata:
+    name: scoutly_postgres_data
