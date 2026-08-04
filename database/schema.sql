@@ -1,11 +1,5 @@
--- Enums
 CREATE TYPE gender_type as ENUM ("men", "women")
-CREATE TYPE division_type AS ENUM ("ncaa_d1", "ncaa_d2", "ncaa_d3", "naia", "njcaa");
-CREATE TYPE user_role_type AS ENUM ("best_player", "travel_squad", "redshirt_freshman", "walk_on");
-CREATE TYPE school_type_enum AS ENUM ("public", "private_nonprofit", "private_forprofit");
-CREATE TYPE climate_type AS ENUM ("warm", "moderate", "cold");
 
--- Table Schemas
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -30,8 +24,13 @@ CREATE TABLE users (
     lat NUMERIC(9,6) NULL,
     lon NUMERIC(9,6) NULL,
     scoring_avg NUMERIC(6, 3) NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
+
+CREATE TYPE division_type AS ENUM ("ncaa_d1", "ncaa_d2", "ncaa_d3", "naia", "njcaa");
+CREATE TYPE user_role_type AS ENUM ("best_player", "travel_squad", "redshirt_freshman", "walk_on");
+CREATE TYPE school_type_enum AS ENUM ("public", "private_nonprofit", "private_forprofit");
+CREATE TYPE climate_type AS ENUM ("warm", "moderate", "cold");
 
 create table user_search_preferences (
     id SERIAL PRIMARY KEY,
@@ -54,11 +53,24 @@ create table user_search_preferences (
     -- based on college scorecard numbering
     preferred_regions INT[] NOT NULL,
     school_size INT[] NOT NULL,
-    school_setting INT[] NOT NULL,
+    school_setting INT[] NOT NULL
 )
 
+CREATE TYPE event_level_type AS ENUM ("local", "state", "regional", "national")
+
 create table user_events (
-    
+    id SERIAL PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    event_name VARCHAR(255) NOT NULL,
+    event_tour_name VARCHAR(255) NULL,
+    course_name VARCHAR(255) NULL,
+    event_level event_level_type NULL,
+    yardage INT NULL,
+    scores INT[] NOT NULL,
+    par INT NULL,
+    finish INT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL
 )
 
 create table saved_matches (
