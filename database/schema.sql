@@ -1,4 +1,4 @@
-CREATE TYPE gender_type as ENUM ("men", "women")
+CREATE TYPE gender_type as ENUM ('men', 'women')
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -27,10 +27,10 @@ CREATE TABLE users (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-CREATE TYPE division_type AS ENUM ("ncaa_d1", "ncaa_d2", "ncaa_d3", "naia", "njcaa");
-CREATE TYPE user_role_type AS ENUM ("best_player", "travel_squad", "redshirt_freshman", "walk_on");
-CREATE TYPE school_type_enum AS ENUM ("public", "private_nonprofit", "private_forprofit");
-CREATE TYPE climate_type AS ENUM ("warm", "moderate", "cold");
+CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
+CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_freshman', 'walk_on');
+CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_forprofit');
+CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
 
 CREATE TABLE user_search_preferences (
     id SERIAL PRIMARY KEY,
@@ -53,11 +53,11 @@ CREATE TABLE user_search_preferences (
     -- based on college scorecard numbering
     preferred_regions INT[] NOT NULL,
     school_size INT[] NOT NULL,
-    school_setting INT[] NOT NULL
+    school_setting INT[] NOT NULL,
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-CREATE TYPE event_level_type AS ENUM ("local", "state", "regional", "national")
+CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national')
 
 CREATE TABLE user_events (
     id SERIAL PRIMARY KEY,
@@ -71,7 +71,7 @@ CREATE TABLE user_events (
     par INT NULL,
     finish INT NULL,
     start_date DATE NOT NULL,
-    end_date DATE NOT NULL
+    end_date DATE NOT NULL,
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
