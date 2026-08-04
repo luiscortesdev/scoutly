@@ -32,7 +32,7 @@ CREATE TYPE user_role_type AS ENUM ("best_player", "travel_squad", "redshirt_fre
 CREATE TYPE school_type_enum AS ENUM ("public", "private_nonprofit", "private_forprofit");
 CREATE TYPE climate_type AS ENUM ("warm", "moderate", "cold");
 
-create table user_search_preferences (
+CREATE TABLE user_search_preferences (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     
@@ -59,7 +59,7 @@ create table user_search_preferences (
 
 CREATE TYPE event_level_type AS ENUM ("local", "state", "regional", "national")
 
-create table user_events (
+CREATE TABLE user_events (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     event_name VARCHAR(255) NOT NULL,
@@ -75,9 +75,9 @@ create table user_events (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-create table college_programs (
+CREATE TABLE college_programs (
     id SERIAL PRIMARY KEY,
-    program_id VARCHAR(255) NOT NULL,
+    program_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
     conference VARCHAR(255) NULL,
     division division_type NULL,
@@ -91,14 +91,26 @@ create table college_programs (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-create table college_events (
+CREATE TABLE college_players (
+    id SERIAL PRIMARY KEY,
+    program_id UUID REFERENCES college_programs(program_id) ON DELETE CASCADE,
+    program_name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    division division_type NULL,
+    rank INT NULL,
+    scoring_avg NUMERIC(6, 3) NULL,
+    top3_finishes INT NULL,
+    total_rounds INT NULL,
+    win_loss_tie VARCHAR(255) NULL,
+    wins INT NULL,
+    graduation_year VARCHAR(10) NULL,
+    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+
+CREATE TABLE college_events (
 
 )
 
-create table college_players (
-
-)
-
-create table saved_matches (
+CREATE TABLE saved_matches (
 
 )
