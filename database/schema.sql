@@ -1,4 +1,9 @@
-CREATE TYPE gender_type as ENUM ('men', 'women')
+CREATE TYPE gender_type as ENUM ('men', 'women');
+CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
+CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_freshman', 'walk_on');
+CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_forprofit');
+CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
+CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national');
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,12 +30,7 @@ CREATE TABLE users (
     lon NUMERIC(9,6) NULL,
     scoring_avg NUMERIC(6, 3) NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
-
-CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
-CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_freshman', 'walk_on');
-CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_forprofit');
-CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
+);
 
 CREATE TABLE user_search_preferences (
     id SERIAL PRIMARY KEY,
@@ -55,9 +55,7 @@ CREATE TABLE user_search_preferences (
     school_size INT[] NOT NULL,
     school_setting INT[] NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
-
-CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national')
+);
 
 CREATE TABLE user_events (
     id SERIAL PRIMARY KEY,
@@ -73,11 +71,10 @@ CREATE TABLE user_events (
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE programs (
-    id SERIAL PRIMARY KEY,
-    program_id UUID NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     conference VARCHAR(255) NULL,
@@ -90,31 +87,26 @@ CREATE TABLE programs (
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE program_events (
     id SERIAL PRIMARY KEY,
-    program_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
-    gender gender_type NOT NULL,
+    program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(10) NULL,
     score VARCHAR(10) NULL,
     event_sg NUMERIC(6, 3) NULL DEFAULT 0,
     total_points NUMERIC(6, 3) NULL DEFAULT 0,
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
-    start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
-    end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
+    start_date DATE NULL DEFAULT CURRENT_DATE,
+    end_date DATE NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE players (
-    id SERIAL PRIMARY KEY,
-    player_id UUID NOT NULL,
-    program_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
-    program_name VARCHAR(255) NOT NULL,
-    gender gender_type NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
-    division division_type NULL,
     rank INT NULL,
     scoring_avg NUMERIC(6, 3) NULL,
     top3_finishes INT NULL,
@@ -123,22 +115,21 @@ CREATE TABLE players (
     wins INT NULL,
     graduation_year VARCHAR(10) NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE player_events (
     id SERIAL PRIMARY KEY,
-    player_id UUID REFERENCES players(player_id) ON DELETE CASCADE,
-    gender gender_type NOT NULL,
+    player_id UUID REFERENCES players(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(10) NULL,
     score VARCHAR(10) NULL,
     event_sg NUMERIC(6, 3) NULL DEFAULT 0,
     total_points NUMERIC(6, 3) NULL DEFAULT 0,
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
-    start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
-    end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
+    start_date DATE NULL DEFAULT CURRENT_DATE,
+    end_date DATE NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 CREATE TABLE saved_matches (
 
