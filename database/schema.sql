@@ -27,8 +27,8 @@ CREATE TABLE users (
     gpa_weighted NUMERIC(3,2) NULL,
     handicap VARCHAR(10) NULL,
     home_course VARCHAR(255) NULL,
-    lat NUMERIC(9,6) NULL,
-    lon NUMERIC(9,6) NULL,
+    latitude NUMERIC(9,6) NULL,
+    longitude NUMERIC(9,6) NULL,
     scoring_avg NUMERIC(6, 3) NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -36,21 +36,16 @@ CREATE TABLE users (
 CREATE TABLE user_search_preferences (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    
-    -- enums
     divisions division_type[] NOT NULL,
     user_role_desire user_role_type NOT NULL, -- What role the player wants on the team
     school_type school_type_enum NOT NULL,
     climate climate_type NOT NULL,
-
-    -- regular values
     program_rank INT NOT NULL, -- minimum program rank
     academic_rigor TEXT NOT NULL,
     min_act INT NOT NULL,
     min_sat INT NOT NULL,
     user_test_score_tolerance INT NOT NULL, -- how strict the user is about minimum test scores
     max_distance INT NOT NULL,
-
     -- based on college scorecard numbering
     preferred_regions INT[] NOT NULL,
     school_size INT[] NOT NULL,
@@ -76,6 +71,7 @@ CREATE TABLE user_events (
 
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    college_id INT NOT NULL REFERENCES colleges(unit_id) ON DELETE CASCADE,
     gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     conference VARCHAR(255) NULL,
@@ -140,4 +136,47 @@ CREATE TABLE saved_matches (
     notes TEXT NULL
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT unique_user_program UNIQUE (user_id, program_id)
+);
+
+CREATE TABLE colleges (
+    unit_id INT PRIMARY KEY, -- Unique ID from the DOE
+    opeid VARCHAR(50) NULL,
+    opeid6 VARCHAR(50) NULL,
+    name VARCHAR(255) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    state CHAR(2) NOT NULL,
+    zip VARCHAR(20) NOT NULL,
+    accreditation_agency VARCHAR(255) NULL,
+    institution_url VARCHAR(255) NULL,
+    net_price_calculator_url VARCHAR(255) NULL,
+    is_main_campus BOOLEAN NULL,
+    region INT NULL,
+    locale INT NULL,
+    latitude NUMERIC(9,6) NULL,
+    longitude NUMERIC(9,6) NULL,
+    admissions_rate NUMERIC(4,2) NULL,
+    
+    sat_reading_25th INT NULL,
+    sat_reading_75th INT NULL,
+    sat_reading_50th INT NULL,
+    sat_math_25th INT NULL,
+    sat_math_75th INT NULL,
+    sat_math_50th INT NULL,
+    sat_total_25th INT NULL,
+    sat_total_75th INT NULL,
+    sat_total_50th INT NULL,
+    sat_avg INT NULL,
+    
+    act_25th INT NULL,
+    act_75th INT NULL,
+    act_50th INT NULL,
+    
+    undergrad_size INT NULL,
+    graduate_size INT NULL,
+    in_state_tuition INT NULL,
+    out_of_state_tuition INT NULL,
+    school_type VARCHAR(100) NULL,
+    address VARCHAR(500) NULL,
+    median_earnings_9yrs INT NULL,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
