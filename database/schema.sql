@@ -94,7 +94,8 @@ CREATE TABLE programs (
 
 CREATE TABLE program_events (
     id SERIAL PRIMARY KEY,
-    team_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
+    program_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
+    gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(10) NULL,
     score VARCHAR(10) NULL,
@@ -111,6 +112,7 @@ CREATE TABLE players (
     player_id UUID NOT NULL,
     program_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
     program_name VARCHAR(255) NOT NULL,
+    gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     division division_type NULL,
     rank INT NULL,
@@ -120,6 +122,21 @@ CREATE TABLE players (
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
     graduation_year VARCHAR(10) NULL,
+    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+
+CREATE TABLE player_events (
+    id SERIAL PRIMARY KEY,
+    player_id UUID REFERENCES players(player_id) ON DELETE CASCADE,
+    gender gender_type NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(10) NULL,
+    score VARCHAR(10) NULL,
+    event_sg NUMERIC(6, 3) NULL DEFAULT 0,
+    total_points NUMERIC(6, 3) NULL DEFAULT 0,
+    weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
+    start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
+    end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
