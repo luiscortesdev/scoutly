@@ -75,9 +75,10 @@ CREATE TABLE user_events (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-CREATE TABLE college_programs (
+CREATE TABLE programs (
     id SERIAL PRIMARY KEY,
     program_id UUID NOT NULL,
+    gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     conference VARCHAR(255) NULL,
     division division_type NULL,
@@ -91,9 +92,24 @@ CREATE TABLE college_programs (
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 )
 
-CREATE TABLE college_players (
+CREATE TABLE program_events (
     id SERIAL PRIMARY KEY,
-    program_id UUID REFERENCES college_programs(program_id) ON DELETE CASCADE,
+    team_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    position VARCHAR(10) NULL,
+    score VARCHAR(10) NULL,
+    event_sg NUMERIC(6, 3) NULL DEFAULT 0,
+    total_points NUMERIC(6, 3) NULL DEFAULT 0,
+    weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
+    start_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
+    end_date DATE NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+
+CREATE TABLE players (
+    id SERIAL PRIMARY KEY,
+    player_id UUID NOT NULL,
+    program_id UUID REFERENCES programs(program_id) ON DELETE CASCADE,
     program_name VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     division division_type NULL,
@@ -105,10 +121,6 @@ CREATE TABLE college_players (
     wins INT NULL,
     graduation_year VARCHAR(10) NULL,
     created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
-
-CREATE TABLE college_events (
-
 )
 
 CREATE TABLE saved_matches (
