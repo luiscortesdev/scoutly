@@ -6,7 +6,7 @@ services:
     
     # Isolate database from the host network
     ports:
-      - "${DB_HOST:-127.0.0.1}:${DB_PORT:-5432}:5432"
+      - "${DB_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-5432}:5432"
 
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
