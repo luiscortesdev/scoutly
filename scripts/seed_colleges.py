@@ -8,12 +8,15 @@ from psycopg2.extras import execute_values
 import pandas as pd
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from dotenv import load_dotenv
 
 COLLEGE_SCORECARD_DATA_URL = "https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip"
 
 SEED_DATA_DIR = os.path.join("database", "seed_data")
 LOCAL_CSV_PATH = os.path.join(SEED_DATA_DIR, "Most-Recent-Cohorts-Institution.csv")
 TEMP_ZIP_PATH = "temp_scorecard.zip"
+
+load_dotenv()
 
 DB_BIND_ADDRESS = os.getenv("DB_BIND_ADDRESS", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "5432")
