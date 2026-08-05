@@ -4,10 +4,9 @@ A free to use and simple way to find the perfect college golf program for you!
 # Database
 Spin up the database using `docker compose up -d`
 
-Apply the schema using these commands (${} represent your environment variables):
+Apply the schema using these commands on windows powershell:
 ```
-docker cp database/schema.sql scoutly_postgres_db:/schema.sql
-docker exec -it scoutly_postgres_db psql -U ${DB_USER} -d scoutly -f /schema.sql  
+Get-Content database/schema.sql | docker exec -i scoutly_postgres_db psql -U scoutly_admin -d scoutly
 ```
 
 # Scripts
