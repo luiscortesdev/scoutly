@@ -84,3 +84,23 @@ def download_data(url, output_path):
                     print(f"Download Progress: {percent:.2f}% ({bytes_written / (1024*1024):.1f} MB)", end="\r")
                     
     print("\n ZIP download complete!")
+    
+    
+def extract_csv_from_zip(zip_path, target_csv_path):
+    # Extracts the csv from the zip file and saves it locally
+    print(f"Extracting CSV from {zip_path}...")
+    
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        csv_files = [f for f in zip_ref.namelist() if f.endswith(".csv")]
+        if not csv_files:
+            print("Error: No csv file found inside the downloaded ZIP.")
+            sys.exit(1)
+            
+        source_csv = csv_files[0]
+        print(f"Found target data file: {source_csv}")
+        
+        with zip_ref.open(source_csv) as source, open(target_csv_path, "wb") as target:
+            shutil.copyfileobj(source, target)
+            
+        print(f"Saved local copy of csv to {target_csv_path}")
+        
