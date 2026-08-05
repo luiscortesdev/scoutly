@@ -103,7 +103,8 @@ def extract_csv_from_zip(zip_path, target_csv_path):
             shutil.copyfileobj(source, target)
             
         print(f"Saved local copy of csv to {target_csv_path}")
-        
+
+      
 def clean_numeric_value(val):
     # Safely convert empty spaces, NaN, or PrivacySuppressed Values to python None
     if pd.isna(val):
@@ -118,3 +119,100 @@ def clean_numeric_value(val):
         return int(float_val) if float_val.is_integer() else float_val
     except ValueError:
         return None
+    
+
+def process_data(file_path):
+    # process the csv file with pandas
+    
+    # data columns in the csv file we want to include
+    columns_to_extract = [
+        "UNITID", "OPEID", "OPEID6", "INSTNM", "CITY", "STABBR", "ZIP", 
+        "ACCREDAGENCY", "INSTURL", "NPCURL", "MAIN", "REGION", "LOCALE", 
+        "LATITUDE", "LONGITUDE", "ADM_RATE", "CONTROL",
+        "SATVR25", "SATVR75", "SATVRMID", "SATMT25", "SATMT75", "SATMTMID", "SAT_AVG",
+        "ACTCM25", "ACTCM75", "ACTCMMID", "UGDS", "TUITIONFEE_IN", "TUITIONFEE_OUT"
+    ]
+    
+    # only read the columns we need
+    df = pd.read_csv(file_path, usecols=columns_to_extract, low_memory=False)
+    
+    # clean up possibly empty values
+    df["INSTNM"] = df["INSTNM"].fillna("Unknown School")
+    df["CITY"] = df["CITY"].fillna("Unknown City")
+    df["STABBR"] = df["STABBR"].fillna("??")
+    df["ZIP"] = df["ZIP"].fillna("00000")
+    
+    # map control numbers to labels in our sql enum
+    control_mapping = {1: "public", 2: "private_nonprofit", 3: "private_forprofit"}
+    df["school_type"] = df["CONTROL"].map(control_mapping).fillna("public")
+    
+    cleaned_rows = []
+    for _, row in df.iterrows():
+        unit_id = clean_numeric_value(row["UNITID"])
+        if not unit_id:
+            continue
+        
+        is_main_campus = True if clean_numeric_value(row["MAIN"]) == 1 else False
+        
+        sat_reading_25 = clean_numeric_value(row["SATVR25"])
+        sat_reading_75 = clean_numeric_value(row["SATVR75"])
+        sat_reading_50 = clean_numeric_value(row["SATVRMID"])
+        
+        sat_math_25 = clean_numeric_value(row["SATMT25"])
+        sat_math_75 = clean_numeric_value(row["SATMT75"])
+        sat_math_50 = clean_numeric_value(row["SATMTMID"])
+        
+        # Calculate totals dynamically
+        sat_total_25 = (sat_reading_25 + sat_math_25) if (sat_reading_25 and sat_math_25) else None
+        sat_total_75 = (sat_reading_75 + sat_math_75) if (sat_reading_75 and sat_math_75) else None
+        sat_total_50 = (sat_reading_50 + sat_math_50) if (sat_reading_50 and sat_math_50) else None
+        
+        cleaned_row = (
+            unit_id,
+            clean_numeric_value(row["OPEID"]),
+            clean_numeric_value(row["OPEID6"]),
+            str(row["INSTNM"]),
+            str(row["CITY"]),
+            str(row["STABBR"])[:2],
+            str(row["ZIP"])[:20],
+            str(row["ACCREDAGENCY"])[:255] if pd.notna(row["ACCREDAGENCY"]) else None,
+            str(row["INSTURL"])[:255] if pd.notna(row["INSTURL"]) else None,
+            str(row["NPCURL"])[:255] if pd.notna(row["NPCURL"]) else None,
+            is_main_campus,
+            clean_numeric_value(row["REGION"]),
+            clean_numeric_value(row["LOCALE"]),
+            clean_numeric_value(row["LATITUDE"]),
+            clean_numeric_value(row["LONGITUDE"]),
+            clean_numeric_value(row["ADM_RATE"]),
+            
+            sat_reading_25,
+            sat_reading_75,
+            sat_reading_50,
+            sat_math_25,
+            sat_math_75,
+            sat_math_50,
+            sat_total_25,
+            sat_total_75,
+            sat_total_50,
+            clean_numeric_value(row["SAT_AVG"]),
+            
+            clean_numeric_value(row["ACTCM25"]),
+            clean_numeric_value(row["ACTCM75"]),
+            clean_numeric_value(row["ACTCMMID"]),
+            
+            clean_numeric_value(row["UGDS"]),
+            None, # Graduate size (seeded as NULL)
+            clean_numeric_value(row["TUITIONFEE_IN"]),
+            clean_numeric_value(row["TUITIONFEE_OUT"]),
+            row["school_type"],
+            None, # Street address (seeded as NULL)
+            None  # Median earnings (seeded as NULL)
+        )
+        cleaned_rows.append(cleaned_row)
+        
+    print(f"Structured {len(cleaned_rows)} records successfully!")
+    return cleaned_rows
+
+
+        
+    
