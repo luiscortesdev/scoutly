@@ -60,3 +60,27 @@ def should_download(url, local_path):
     except Exception as e:
         print(f"Error checking updates ({e}). Defaulting to download.")
         return True
+    
+    
+def download_data(url, output_path):
+    # Download the zip file in a chunks
+    print(f"Initiating stream download of College Scoreboard ZIP...")
+    
+    response = requests.get(url, stream=True)
+    if response.status_code != 200:
+        print(f"Connection to {url} failed. Status: {response.status_code}. Exiting...")
+        sys.exit(1)
+        
+    total_size = int(response.headers.get("content-length", 0))
+    bytes_written = 0
+    
+    with open(output_path, "wb") as file:
+        for chunk in response.iter_content(chunk_size=1024 * 1024): # 1MB Chunks
+            if chunk:
+                file.write(chunk)
+                bytes_written += len(chunk)
+                if total_size > 0:
+                    percent = (bytes_written / total_size) * 100
+                    print(f"Download Progress: {percent:.2f}% ({bytes_written / (1024*1024):.1f} MB)", end="\r")
+                    
+    print("\n ZIP download complete!")
