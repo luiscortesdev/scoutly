@@ -104,3 +104,17 @@ def extract_csv_from_zip(zip_path, target_csv_path):
             
         print(f"Saved local copy of csv to {target_csv_path}")
         
+def clean_numeric_value(val):
+    # Safely convert empty spaces, NaN, or PrivacySuppressed Values to python None
+    if pd.isna(val):
+        return None
+    
+    val_str = str(val).strip().lower()
+    if val_str in ("privacysuppressed", "null", "nan", "", "none"):
+        return None
+    
+    try:
+        float_val = float(val)
+        return int(float_val) if float_val.is_integer() else float_val
+    except ValueError:
+        return None
