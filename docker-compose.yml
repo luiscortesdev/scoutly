@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:17-alpine
-    container_name: ${DB_NAME:-scoutly}_postgres_db
+    container_name: scoutly_postgres_db
     restart: unless-stopped
     
     # Isolate database from the host network
@@ -11,7 +11,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME:-scoutly}
+      POSTGRES_DB: scoutly
       
       # Defend against Alpine's musl collation anomalies
       LANG: C.UTF-8
@@ -30,4 +30,4 @@ services:
 
 volumes:
   pgdata:
-    name: ${DB_NAME:-scoutly}_postgres_data
+    name: scoutly_postgres_data
