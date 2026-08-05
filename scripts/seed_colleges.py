@@ -15,7 +15,7 @@ SEED_DATA_DIR = os.path.join("database", "seed_data")
 LOCAL_CSV_PATH = os.path.join(SEED_DATA_DIR, "Most-Recent-Cohorts-Institution.csv")
 TEMP_ZIP_PATH = "temp_scorecard.zip"
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_BIND_ADDRESS = os.getenv("DB_BIND_ADDRESS", "127.0.0.1")
 DB_PORT = os.getenv("DB_PORT", "5432")
 DB_NAME = os.getenv("DB_NAME", "scoutly")
 DB_USER = os.getenv("DB_USER", "scoutly_admin")
@@ -214,5 +214,78 @@ def process_data(file_path):
     return cleaned_rows
 
 
-        
+def seed_database(records):
+    # Insert the processed records into PostgreSQL
+    print("Accessing PostgreSQL Database...")
     
+    try:
+        conn = psycopg2.connect(
+            host=DB_BIND_ADDRESS,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
+        )
+        cursor = conn.cursor()
+        
+        insert_query = """
+            INSERT INTO colleges (
+                unit_id, opeid, opeid6, name, city, state, zip, 
+                accreditation_agency, institution_url, net_price_calculator_url, 
+                is_main_campus, region, locale, latitude, longitude, admissions_rate, 
+                sat_reading_25th, sat_reading_75th, sat_reading_50th, 
+                sat_math_25th, sat_math_75th, sat_math_50th, 
+                sat_total_25th, sat_total_75th, sat_total_50th, sat_avg, 
+                act_25th, act_75th, act_50th, 
+                undergrad_size, graduate_size, in_state_tuition, out_of_state_tuition, 
+                school_type, address, median_earnings_9yrs
+            ) VALUES %s
+            ON CONFLICT (unit_id) DO UPDATE SET
+                opeid = EXCLUDED.opeid,
+                opeid6 = EXCLUDED.opeid6,
+                name = EXCLUDED.name,
+                city = EXCLUDED.city,
+                state = EXCLUDED.state,
+                zip = EXCLUDED.zip,
+                accreditation_agency = EXCLUDED.accreditation_agency,
+                institution_url = EXCLUDED.institution_url,
+                net_price_calculator_url = EXCLUDED.net_price_calculator_url,
+                is_main_campus = EXCLUDED.is_main_campus,
+                region = EXCLUDED.region,
+                locale = EXCLUDED.locale,
+                latitude = EXCLUDED.latitude,
+                longitude = EXCLUDED.longitude,
+                admissions_rate = EXCLUDED.admissions_rate,
+                sat_reading_25th = EXCLUDED.sat_reading_25th,
+                sat_reading_75th = EXCLUDED.sat_reading_75th,
+                sat_reading_50th = EXCLUDED.sat_reading_50th,
+                sat_math_25th = EXCLUDED.sat_math_25th,
+                sat_math_75th = EXCLUDED.sat_math_75th,
+                sat_math_50th = EXCLUDED.sat_math_50th,
+                sat_total_25th = EXCLUDED.sat_total_25th,
+                sat_total_75th = EXCLUDED.sat_total_75th,
+                sat_total_50th = EXCLUDED.sat_total_50th,
+                sat_avg = EXCLUDED.sat_avg,
+                act_25th = EXCLUDED.act_25th,
+                act_75th = EXCLUDED.act_75th,
+                act_50th = EXCLUDED.act_50th,
+                undergrad_size = EXCLUDED.undergrad_size,
+                in_state_tuition = EXCLUDED.in_state_tuition,
+                out_of_state_tuition = EXCLUDED.out_of_state_tuition,
+                school_type = EXCLUDED.school_type;
+        """
+        
+        print(f"Running upsert transaction...")
+        execute_values(cursor, insert_query, records)
+        conn.commit()
+        
+        cursor.execute("SELECT COUNT(*) FROM colleges;")
+        count = cursor.fetchone()[0]
+        print(f"Seeding complete. Database now contains {count} colleges")
+        
+        cursor.close()
+        conn.close()
+        
+    except Exception as e:
+        print(f"Database connection error: {e}")
+        sys.exit(1)
