@@ -4,7 +4,6 @@ services:
     container_name: scoutly_postgres_db
     restart: unless-stopped
     
-    # Isolate database from the host network
     ports:
       - "${DB_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-5432}:5432"
 
@@ -13,14 +12,12 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: scoutly
       
-      # Defend against Alpine's musl collation anomalies
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
 
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-    # Prevent backend startup race conditions
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
