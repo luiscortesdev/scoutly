@@ -129,11 +129,11 @@ def process_data(file_path):
     
     # data columns in the csv file we want to include
     columns_to_extract = [
-        "UNITID", "OPEID", "OPEID6", "INSTNM", "CITY", "STABBR", "ZIP", 
+        "UNITID", "OPEID", "OPEID6", "INSTNM", "CITY", "STABBR", "ADDR", "ZIP", 
         "ACCREDAGENCY", "INSTURL", "NPCURL", "MAIN", "REGION", "LOCALE", 
         "LATITUDE", "LONGITUDE", "ADM_RATE", "CONTROL",
         "SATVR25", "SATVR75", "SATVRMID", "SATMT25", "SATMT75", "SATMTMID", "SAT_AVG",
-        "ACTCM25", "ACTCM75", "ACTCMMID", "UGDS", "TUITIONFEE_IN", "TUITIONFEE_OUT"
+        "ACTCM25", "ACTCM75", "ACTCMMID", "UGDS", "GRADS", "TUITIONFEE_IN", "TUITIONFEE_OUT", "MD_EARN_WNE_P9",
     ]
     
     # only read the columns we need
@@ -143,6 +143,7 @@ def process_data(file_path):
     df["INSTNM"] = df["INSTNM"].fillna("Unknown School")
     df["CITY"] = df["CITY"].fillna("Unknown City")
     df["STABBR"] = df["STABBR"].fillna("??")
+    df["ADDR"] = df["ADDR"].fillna("Unknown Address")
     df["ZIP"] = df["ZIP"].fillna("00000")
     
     # map control numbers to labels in our sql enum
@@ -204,12 +205,12 @@ def process_data(file_path):
             clean_numeric_value(row["ACTCMMID"]),
             
             clean_numeric_value(row["UGDS"]),
-            None, # Graduate size (seeded as NULL)
+            clean_numeric_value(row["GRADS"]), # Graduate size (seeded as NULL)
             clean_numeric_value(row["TUITIONFEE_IN"]),
             clean_numeric_value(row["TUITIONFEE_OUT"]),
             row["school_type"],
-            None, # Street address (seeded as NULL)
-            None  # Median earnings (seeded as NULL)
+            str(row["ADDR"]), # Street address (seeded as NULL)
+            clean_numeric_value(row["MD_EARN_WNE_P9"])  # Median earnings (seeded as NULL)
         )
         cleaned_rows.append(cleaned_row)
         
@@ -273,9 +274,12 @@ def seed_database(records):
                 act_75th = EXCLUDED.act_75th,
                 act_50th = EXCLUDED.act_50th,
                 undergrad_size = EXCLUDED.undergrad_size,
+                graduate_size = EXCLUDED.graduate_size,
                 in_state_tuition = EXCLUDED.in_state_tuition,
                 out_of_state_tuition = EXCLUDED.out_of_state_tuition,
-                school_type = EXCLUDED.school_type;
+                school_type = EXCLUDED.school_type,
+                address = EXCLUDED.address,
+                median_earnings_9yrs = EXCLUDED.median_earnings_9yrs
         """
         
         print(f"Running upsert transaction...")
