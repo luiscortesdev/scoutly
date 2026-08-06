@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import re
 import zipfile
 import requests
 import psycopg2
@@ -8,9 +9,11 @@ from psycopg2.extras import execute_values
 import pandas as pd
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
-COLLEGE_SCORECARD_DATA_URL = "https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip"
+COLLEGE_SCORECARD_URL = "https://collegescorecard.ed.gov/data/"
+FALLBACK_DATA_URL = "https://ed-public-download.scorecard.network/downloads/Most-Recent-Cohorts-Institution_06102026.zip" # Last Updated 8/6/26
 
 SEED_DATA_DIR = os.path.join("database", "seed_data")
 LOCAL_CSV_PATH = os.path.join(SEED_DATA_DIR, "Most-Recent-Cohorts-Institution.csv")
@@ -25,6 +28,37 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 os.makedirs(SEED_DATA_DIR, exist_ok=True)
+
+def get_download_url():
+    try:
+        response = requests.get(COLLEGE_SCORECARD_URL, timeout=10)
+        if response.status_code != 200:
+            print(f"College Scorecard data page returned status code {response.status_code}. Using fallback URL.")
+            return FALLBACK_DATA_URL
+        
+        soup = BeautifulSoup(response.text, features="html.parser")
+        pattern = re.compile(r"Most-Recent-Cohorts-Institution.*\.zip") # regex to find zip file link
+        
+        # use bs4 find method to search for a tags whose href match the regex
+        link_tag = soup.find("a", href=pattern)
+        if link_tag and "href" in link_tag.attrs:
+            href = link_tag["href"]
+            
+            # append college scorecard downloads url incase the href is relative. as of 8/6/26 the download URL is ABSOLUTE
+            # not relative
+            if href.startswith("/"):
+                href = "https://ed-public-download.scorecard.network/downloads" + href
+                
+            print(f"Found latest zip file URL: {href}")
+            return href
+        
+        # If we could not find the download link use the fallback link
+        print("Could not find zip file link in html. Using fallback link.")
+        return COLLEGE_SCORECARD_URL    
+
+    except Exception as e:
+        print(f"Error during zip file URL discovery ({e}). Using fallback url.")
+        return COLLEGE_SCORECARD_URL
 
 def should_download(url, local_path):
     # Check if college scorecard data has been changed
@@ -299,12 +333,14 @@ def seed_database(records):
         
 
 if __name__ == "__main__":
-    download_needed = should_download(COLLEGE_SCORECARD_DATA_URL, LOCAL_CSV_PATH)
+    data_url = get_download_url()
+
+    download_needed = should_download(data_url, LOCAL_CSV_PATH)
     
     if download_needed:
         try:
             # Download zip file
-            download_data(COLLEGE_SCORECARD_DATA_URL, TEMP_ZIP_PATH)
+            download_data(data_url, TEMP_ZIP_PATH)
             
             # extract csv
             extract_csv_from_zip(TEMP_ZIP_PATH, LOCAL_CSV_PATH)
@@ -320,4 +356,4 @@ if __name__ == "__main__":
         seed_database(cleaned_records)
     else:
         print("Critical Error: Local CSV file is missing. Seed aborted.")
-        
+    
