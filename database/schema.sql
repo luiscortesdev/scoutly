@@ -123,12 +123,15 @@ CREATE TABLE programs (
     division division_type NULL,
     head_coach VARCHAR(255) NULL,
     rank INT NULL,
-    adjusted_scoring_avg NUMERIC(6, 3) NULL,
+    scoring_avg NUMERIC(10, 3) NULL,
+    adjusted_scoring_avg NUMERIC(10, 3) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    CONSTRAINT unique_program_gender UNIQUE (college_id, gender)
 );
 
 CREATE TABLE program_events (
@@ -151,7 +154,8 @@ CREATE TABLE players (
     clippd_id VARCHAR(50) UNIQUE NULL,
     name VARCHAR(255) NOT NULL,
     rank INT NULL,
-    adjusted_scoring_avg NUMERIC(6, 3) NULL,
+    scoring_avg NUMERIC(10, 3) NULL,
+    adjusted_scoring_avg NUMERIC(10, 3) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
