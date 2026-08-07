@@ -22,20 +22,20 @@ def map_division(div):
     
     div_str = div.lower().strip()
     
-    if "division i" in div_str:
-        return "ncaa_d1"
+    if "division iii" in div_str:
+        return "ncaa_d3"
     elif "division ii" in div_str:
         return "ncaa_d2"
-    elif "division iii" in div_str:
-        return "ncaa_d3"
+    elif "division i" in div_str:
+        return "ncaa_d1"
     elif "naia" in div_str:
         return "naia"
-    elif "njcaa i" in div_str:
-        return "njcaa_i"
-    elif "njcaa ii" in div_str:
-        return "njcaa_ii"
     elif "njcaa iii" in div_str:
         return "njcaa_iii"
+    elif "njcaa ii" in div_str:
+        return "njcaa_ii"
+    elif "njcaa i" in div_str:
+        return "njcaa_i"
     
     return None
 
@@ -63,6 +63,7 @@ def resolve_college_id(cursor, clippd_school_name):
         
         if result and result[2] > 0.5:
             print(f"Fuzzy matched 'f{clippd_school_name}' to '{result[1]}' (Score: {result[2]:.2f})")
+            return result[0]
             
     except Exception:
         pass
@@ -71,6 +72,81 @@ def resolve_college_id(cursor, clippd_school_name):
     
     return None
 
+def fetch_rankings_page(type_param, gender, division, limit, offset):
+    params = {
+        "rankingType": type_param,
+        "gender": gender,
+        "division": division,
+        "sortField": "rank",
+        "season": "2026",
+        "limit": limit,
+        "offset": offset
+    }
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    
+    try:
+        response = requests.get(CLIPPD_RANKINGS_API_BASE_URL, params=params, headers=headers, timeout=10)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"API returned status code: {response.status_code}")
+            return None
+        
+    except Exception as e:
+        print(f"Request error: {e}")
+        return None
+
+def ingest_all_programs():
+    LIMIT = 500
+    
+    genders = ["Men", "Women"]
+    divisions = [
+        "NCAA Division I",
+        "NCAA Division II",
+        "NCAA Division III",
+        "NAIA",
+        "NJCAA I",
+        "NJCAA II",
+        "NJCAA III",
+    ]
+    
+    all_programs = []
+    
+    print("Beginning Clippd API ingestion...")
+    
+    for gen in genders:
+        for div in divisions:
+            has_more = True
+            offset = 0
+            
+            while has_more:
+                print(f"Fetching offset {offset}")
+                data = fetch_rankings_page("Team", gen, div, LIMIT, offset)
+                
+                if not data:
+                    print("[!] Failed to fetch data. Aborting loop to protect database integrity.")
+                    break
+                
+                results = data.get("results", [])
+                
+                if not results:
+                    print("No more records found. Reached end of dataset.")
+                    has_more = False
+                    break
+                
+                all_programs.extend(results)
+                
+                offset += LIMIT
+                
+                time.sleep(1)
+                
+    print(f"Total programs retrieved: {len(all_programs)}")
+    
+    return all_programs
+        
 
 def ingest_program_rankings():
     conn = psycopg2.connect(
@@ -130,7 +206,7 @@ def ingest_program_rankings():
                 %(rank)s, %(scoring_avg)s, %(adjusted_scoring_avg)s, %(top3_finishes)s, %(total_rounds)s, %(win_loss_tie)s, %(wins)s
             )
             ON CONFLICT (college_id, gender) DO UPDATE SET
-                clippd_id = EXCLUDED.clippd_id;
+                clippd_id = EXCLUDED.clippd_id,
                 name = EXCLUDED.name,
                 conference = EXCLUDED.conference,
                 division = EXCLUDED.division,
@@ -149,7 +225,8 @@ def ingest_program_rankings():
     print("Ingestion complete! Record resolved and upserted successfully")
     
     cursor.close()
+    conn.close()
         
         
-    
-    
+if __name__ == "__main__":
+    ingest_program_rankings()
