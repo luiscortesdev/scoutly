@@ -1,6 +1,6 @@
 -- Enums
 CREATE TYPE gender_type as ENUM ('men', 'women');
-CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa');
+CREATE TYPE division_type AS ENUM ('ncaa_d1', 'ncaa_d2', 'ncaa_d3', 'naia', 'njcaa_i', 'njcaa_ii', 'njcaa_iii');
 CREATE TYPE user_role_type AS ENUM ('best_player', 'travel_squad', 'redshirt_freshman', 'walk_on');
 CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_forprofit');
 CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
