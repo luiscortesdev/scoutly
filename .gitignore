@@ -1,3 +1,4 @@
 .env
 .venv
 database/seed_data
+scraper/seed_data
