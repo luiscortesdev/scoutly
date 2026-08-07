@@ -116,6 +116,7 @@ CREATE TABLE colleges (
 CREATE TABLE programs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     college_id INT NOT NULL REFERENCES colleges(unit_id) ON DELETE CASCADE,
+    clippd_id VARCHAR(50) UNIQUE NULL,
     gender gender_type NOT NULL,
     name VARCHAR(255) NOT NULL,
     conference VARCHAR(255) NULL,
@@ -147,6 +148,7 @@ CREATE TABLE program_events (
 CREATE TABLE players (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
+    clippd_id VARCHAR(50) UNIQUE NULL,
     name VARCHAR(255) NOT NULL,
     rank INT NULL,
     adjusted_scoring_avg NUMERIC(6, 3) NULL,
