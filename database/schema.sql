@@ -122,7 +122,7 @@ CREATE TABLE programs (
     division division_type NULL,
     head_coach VARCHAR(255) NULL,
     rank INT NULL,
-    scoring_avg NUMERIC(6, 3) NULL,
+    adjusted_scoring_avg NUMERIC(6, 3) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
@@ -149,7 +149,7 @@ CREATE TABLE players (
     program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     rank INT NULL,
-    scoring_avg NUMERIC(6, 3) NULL,
+    adjusted_scoring_avg NUMERIC(6, 3) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
@@ -183,6 +183,8 @@ CREATE TABLE saved_matches (
 );
 
 -- Views
+-- Need to update this view to adjust for each individual rounds playing level and apply modifiers to adjust it to the college level.
+-- Also, need to update it to adjust for the courses par itself.
 CREATE OR REPLACE VIEW user_scoring_averages AS
 WITH individual_rounds AS (
     SELECT 
