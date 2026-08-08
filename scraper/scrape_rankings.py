@@ -58,7 +58,7 @@ def resolve_college_id(cursor, clippd_school_name):
     
     # use our direct unitid overrides
     if isinstance(lookup, int):
-        print(f"Direct ID override. '{clippd_school_name}' to UNITID {lookup}")
+        # print(f"Direct ID override. '{clippd_school_name}' to UNITID {lookup}")
         return
     
     # try case-insensitive match
