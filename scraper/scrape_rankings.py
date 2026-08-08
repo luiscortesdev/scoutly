@@ -121,7 +121,7 @@ def fetch_rankings_page(type_param, gender, division, limit, offset):
 
 
 def ingest_all_programs():
-    # get the 
+    # get the rankings across all divisions and genders
     LIMIT = 500
     
     genders = ["Men", "Women"]
