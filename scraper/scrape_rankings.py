@@ -18,8 +18,8 @@ CACHE_DIR = os.path.join("scraper", "seed_data")
 PROGRAM_CACHE_FILE_PATH = os.path.join(CACHE_DIR, "clippd_program_rankings.json")
 CACHE_EXPIRATION_SECONDS = 7 * 24 * 60 * 60 # 1 week
 
-MAPS_DIR = os.path.join("maps", "")
-CLIPPD_NAME_TO_DOE_NAME_MAP_PATH = os.path.join("scraper", "maps", "clippd_to_doe_name.json")
+MAPS_DIR = os.path.join("scraper", "maps")
+CLIPPD_NAME_TO_DOE_NAME_MAP_PATH = os.path.join(MAPS_DIR, "clippd_to_doe_name.json")
 with open(CLIPPD_NAME_TO_DOE_NAME_MAP_PATH, "r") as f:
     MANUAL_PROGRAM_NAME_MAP = json.load(f)
 
