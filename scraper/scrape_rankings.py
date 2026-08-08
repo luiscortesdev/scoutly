@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import json
 import psycopg2
 from dotenv import load_dotenv
 
@@ -13,6 +14,11 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 CLIPPD_RANKINGS_API_BASE_URL = "https://scoreboard.clippd.com/api/rankings/leaderboard"
+CACHE_DIR = os.path.join("scraper", "seed_data")
+PROGRAM_CACHE_FILE_PATH = os.path.join(CACHE_DIR, "clippd_program_rankings.json")
+CACHE_EXPIRATION_SECONDS = 7 * 24 * 60 * 60 # 1 week
+
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 # helper functions
 def map_division(div):
@@ -73,6 +79,7 @@ def resolve_college_id(cursor, clippd_school_name):
     return None
 
 def fetch_rankings_page(type_param, gender, division, limit, offset):
+    # helper function to fetch the rankings api
     params = {
         "rankingType": type_param,
         "gender": gender,
@@ -99,7 +106,9 @@ def fetch_rankings_page(type_param, gender, division, limit, offset):
         print(f"Request error: {e}")
         return None
 
+
 def ingest_all_programs():
+    # get the 
     LIMIT = 500
     
     genders = ["Men", "Women"]
@@ -147,8 +156,33 @@ def ingest_all_programs():
     
     return all_programs
         
+        
+# Check local json cache before calling ingesting all programs
+def get_program_rankings_data():
+    if os.path.exists(PROGRAM_CACHE_FILE_PATH):
+        file_age = time.time() - os.path.getmtime(PROGRAM_CACHE_FILE_PATH)
+        
+        if file_age < CACHE_EXPIRATION_SECONDS:
+            print(f"Program json cache is still valid. Age: {file_age}. Bypassing server requests...")
+            with open(PROGRAM_CACHE_FILE_PATH, "r") as f:
+                return json.load(f)
+            
+        else:
+            print("Cache has expired. Fetching updated program rankings...")
+            
+    else:
+        print("Could not find local cache. Fetching updated program rankings...")
+        
+    fresh_data = ingest_all_programs()
+    
+    with open(PROGRAM_CACHE_FILE_PATH, "w") as f:
+        json.dump(fresh_data, f, indent=2)
+        
+    print("Saved program rankings to local cache")
+    
+    return fresh_data
 
-def ingest_program_rankings():
+def seed_program_rankings():
     conn = psycopg2.connect(
         host=DB_BIND_ADDRESS,
         port=DB_PORT,
@@ -163,7 +197,7 @@ def ingest_program_rankings():
     conn.commit()
     
     print("Calling program rankings api for data...")
-    api_payload = ingest_all_programs()
+    api_payload = get_program_rankings_data()
     
     print("Starting ranking ingestion and entity resolution...")
     for item in api_payload:
@@ -229,4 +263,4 @@ def ingest_program_rankings():
         
         
 if __name__ == "__main__":
-    ingest_program_rankings()
+    seed_program_rankings()
