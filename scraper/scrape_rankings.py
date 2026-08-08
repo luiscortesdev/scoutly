@@ -176,13 +176,19 @@ def ingest_all_rankings(type_param):
         
         
 # Check local json cache before calling ingesting all programs
-def get_program_rankings_data():
-    if os.path.exists(PROGRAM_CACHE_FILE_PATH):
-        file_age = time.time() - os.path.getmtime(PROGRAM_CACHE_FILE_PATH)
+def get_rankings_data(type_param):
+    if not type_param in ("Team", "Player"):
+        print(f"Please provide a valid of type of 'Team' or 'Player'!")
+        return None
+        
+    cache_file  = PROGRAM_CACHE_FILE_PATH if type_param == "Team" else PLAYER_CACHE_FILE_PATH
+    
+    if os.path.exists(cache_file):
+        file_age = time.time() - os.path.getmtime(cache_file)
         
         if file_age < CACHE_EXPIRATION_SECONDS:
-            print(f"Program json cache is still valid. Age: {file_age}. Bypassing server requests...")
-            with open(PROGRAM_CACHE_FILE_PATH, "r") as f:
+            print(f"{type_param} json cache is still valid. Age: {file_age}. Bypassing server requests...")
+            with open(cache_file, "r") as f:
                 return json.load(f)
             
         else:
@@ -191,9 +197,9 @@ def get_program_rankings_data():
     else:
         print("Could not find local cache. Fetching updated program rankings...")
         
-    fresh_data = ingest_all_rankings("Team")
+    fresh_data = ingest_all_rankings(type_param)
     
-    with open(PROGRAM_CACHE_FILE_PATH, "w") as f:
+    with open(cache_file, "w") as f:
         json.dump(fresh_data, f, indent=2)
         
     print("Saved program rankings to local cache")
@@ -215,7 +221,7 @@ def seed_program_rankings():
     conn.commit()
     
     print("Calling program rankings api for data...")
-    api_payload = get_program_rankings_data()
+    api_payload = get_rankings_data("Team")
     
     print("Starting ranking ingestion and entity resolution...")
     for item in api_payload:
