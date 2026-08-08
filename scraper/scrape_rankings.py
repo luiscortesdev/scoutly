@@ -18,6 +18,11 @@ CACHE_DIR = os.path.join("scraper", "seed_data")
 PROGRAM_CACHE_FILE_PATH = os.path.join(CACHE_DIR, "clippd_program_rankings.json")
 CACHE_EXPIRATION_SECONDS = 7 * 24 * 60 * 60 # 1 week
 
+MAPS_DIR = os.path.join("maps", "")
+CLIPPD_NAME_TO_DOE_NAME_MAP_PATH = os.path.join("scraper", "maps", "clippd_to_doe_name.json")
+with open(CLIPPD_NAME_TO_DOE_NAME_MAP_PATH, "r") as f:
+    MANUAL_PROGRAM_NAME_MAP = json.load(f)
+
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 # helper functions
@@ -48,9 +53,16 @@ def map_division(div):
 def resolve_college_id(cursor, clippd_school_name):
     # fuzzy match clippd school name to the DOE college board name
     
-    # try case-insensitive match
-    cursor.execute("SELECT unit_id FROM colleges WHERE name ILIKE %s;", [clippd_school_name])
+    # use manual map
+    lookup = MANUAL_PROGRAM_NAME_MAP.get(clippd_school_name, clippd_school_name)
     
+    # use our direct unitid overrides
+    if isinstance(lookup, int):
+        print(f"Direct ID override. '{clippd_school_name}' to UNITID {lookup}")
+        return
+    
+    # try case-insensitive match
+    cursor.execute("SELECT unit_id FROM colleges WHERE name ILIKE %s;", [lookup])
     result = cursor.fetchone()
     if result:
         return result[0]
@@ -60,18 +72,19 @@ def resolve_college_id(cursor, clippd_school_name):
         query = """
             SELECT unit_id, name, similarity(name, %s) AS score
             FROM colleges
-            WHERE name % %s OR name ILIKE %s
+            WHERE name %% %s OR name ILIKE %s
             ORDER BY score DESC
             LIMIT 1;
         """
-        cursor.execute(query, [clippd_school_name, clippd_school_name, f"%{clippd_school_name}%"])
+        cursor.execute(query, [lookup, lookup, f"%{lookup}%"])
         result = cursor.fetchone()
         
         if result and result[2] > 0.5:
-            print(f"Fuzzy matched 'f{clippd_school_name}' to '{result[1]}' (Score: {result[2]:.2f})")
+            # print(f"Fuzzy matched '{clippd_school_name}' to '{result[1]}' (Score: {result[2]:.2f})")
             return result[0]
             
-    except Exception:
+    except Exception as e:
+        print(f"Fuzzy match error: {e}")
         pass
     
     print(f"Could not resolve DOE college ID for '{clippd_school_name}'")
