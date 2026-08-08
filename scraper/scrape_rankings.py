@@ -14,8 +14,9 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 CLIPPD_RANKINGS_API_BASE_URL = "https://scoreboard.clippd.com/api/rankings/leaderboard"
-CACHE_DIR = os.path.join("scraper", "seed_data")
+CACHE_DIR = os.path.join("scraper", ".cache")
 PROGRAM_CACHE_FILE_PATH = os.path.join(CACHE_DIR, "clippd_program_rankings.json")
+PLAYER_CACHE_FILE_PATH = os.path.join(CACHE_DIR, "clippd_player_rankings.json")
 CACHE_EXPIRATION_SECONDS = 7 * 24 * 60 * 60 # 1 week
 
 MAPS_DIR = os.path.join("scraper", "maps")
@@ -120,8 +121,12 @@ def fetch_rankings_page(type_param, gender, division, limit, offset):
         return None
 
 
-def ingest_all_programs():
+def ingest_all_rankings(type_param):
     # get the rankings across all divisions and genders
+    if not type_param in ("Team", "Player"):
+        print(f"Please provide a valid of type of 'Team' or 'Player'!")
+        return None
+    
     LIMIT = 500
     
     genders = ["Men", "Women"]
@@ -135,9 +140,9 @@ def ingest_all_programs():
         "NJCAA III",
     ]
     
-    all_programs = []
+    all_rankings = []
     
-    print("Beginning Clippd API ingestion...")
+    print("Beginning Clippd API ingestion for programs...")
     
     for gen in genders:
         for div in divisions:
@@ -146,7 +151,7 @@ def ingest_all_programs():
             
             while has_more:
                 print(f"Fetching offset {offset}")
-                data = fetch_rankings_page("Team", gen, div, LIMIT, offset)
+                data = fetch_rankings_page(type_param, gen, div, LIMIT, offset)
                 
                 if not data:
                     print("[!] Failed to fetch data. Aborting loop to protect database integrity.")
@@ -159,15 +164,15 @@ def ingest_all_programs():
                     has_more = False
                     break
                 
-                all_programs.extend(results)
+                all_rankings.extend(results)
                 
                 offset += LIMIT
                 
                 time.sleep(1)
                 
-    print(f"Total programs retrieved: {len(all_programs)}")
+    print(f"Total {type_param}s retrieved: {len(all_rankings)}")
     
-    return all_programs
+    return all_rankings
         
         
 # Check local json cache before calling ingesting all programs
@@ -186,7 +191,7 @@ def get_program_rankings_data():
     else:
         print("Could not find local cache. Fetching updated program rankings...")
         
-    fresh_data = ingest_all_programs()
+    fresh_data = ingest_all_rankings("Team")
     
     with open(PROGRAM_CACHE_FILE_PATH, "w") as f:
         json.dump(fresh_data, f, indent=2)
