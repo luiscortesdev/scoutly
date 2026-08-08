@@ -223,7 +223,7 @@ def seed_program_rankings():
     print("Calling program rankings api for data...")
     api_payload = get_rankings_data("Team")
     
-    print("Starting ranking ingestion and entity resolution...")
+    print("Starting program ranking ingestion and entity resolution...")
     for item in api_payload:
         school_name = item.get("schoolName")
         
@@ -284,7 +284,73 @@ def seed_program_rankings():
     
     cursor.close()
     conn.close()
+
+def seed_player_rankings():
+    conn = psycopg2.connect(
+        host=DB_BIND_ADDRESS,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
+    cursor = conn.cursor()
+    
+    print("Calling player rankings api for data...")
+    api_payload = get_rankings_data("Player")
+    
+    print("Starting player ranking ingestion and entity resolution...")
+    
+    for item in api_payload:
+        name = item.get("playerName")
+
+        program_id = item.get("schoolId")
+        player_id = item.get("playerId")
+            
+        total_rounds = int(item.get("strokePlayRounds", 0)) + int(item.get("matchPlayRounds", 0))
+            
+        player_record = {
+            "program_id": program_id,
+            "clippd_id": player_id,
+            "name": name,
+            "rank": item.get("rank"),
+            "scoring_avg": item.get("averageScore"),
+            "adjusted_scoring_avg": item.get("adjustedScore"),
+            "top3_finishes": item.get("eventsTop3"),
+            "total_rounds": total_rounds,
+            "win_loss_tie": item.get("winLossTie"),
+            "wins": item.get("eventsWon"),
+            "graduation_year": None # not included in api
+        }
+            
+        upsert_query = """
+            INSERT INTO programs (
+                program_id, clippd_id, name, rank, scoring_avg, adjusted_scoring_avg, top3_finishes, total_rounds, win_loss_tie, wins, graduation_year
+            ) VALUES (
+                %(program_id)s, %(clippd_id)s, %(name)s, %(rank)s, %(scoring_avg)s, %(adjusted_scoring_avg)s,
+                %(top3_finishes)s, %(total_rounds)s, %(win_loss_tie)s, %(wins)s, %(graduation_year)s
+            )
+            ON CONFLICT (college_id, gender) DO UPDATE SET
+                program_id = EXCLUDED.program_id,
+                clippd_id = EXCLUDED.clippd_id,
+                name = EXCLUDED.name,
+                rank = EXCLUDED.rank,
+                scoring_avg = EXCLUDED.scoring_avg,
+                adjusted_scoring_avg = EXCLUDED.adjusted_scoring_avg,
+                top3_finishes = EXCLUDED.top3_finishes,
+                total_rounds = EXCLUDED.total_rounds,
+                win_loss_tie = EXCLUDED.win_loss_tie,
+                wins = EXCLUDED.wins
+        """
+            
+        cursor.execute(upsert_query, player_record)
+            
+    conn.commit()
+    print("Ingestion complete! Record resolved and upserted successfully")
         
+    cursor.close()
+    conn.close()
+    
         
 if __name__ == "__main__":
     seed_program_rankings()
+    seed_player_rankings()
