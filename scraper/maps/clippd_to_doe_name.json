@@ -19,6 +19,14 @@
     "Embry-Riddle Aeronautical University (FL)": 133553, 
     "Embry-Riddle Aeronautical University (AZ)": 104586,
 
+    "canadian universities matched to our custom sql ids": "comment",
+    "at some point we will need to figure out a way to gather instituional data for these schools": "comment",
+
+    "Simon Fraser University": 999901,
+    "University of Victoria": 999902,
+    "University of British Columbia": 999903,
+    "Bishop University - Quebec": 999904,
+
     "lexical disconnects that always need to be manually resolved": "comment",
 
     "Louisiana": "University of Louisiana at Lafayette",
