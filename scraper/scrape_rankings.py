@@ -60,7 +60,7 @@ def resolve_college_id(cursor, clippd_school_name):
     # use our direct unitid overrides
     if isinstance(lookup, int):
         # print(f"Direct ID override. '{clippd_school_name}' to UNITID {lookup}")
-        return
+        return lookup
     
     # try case-insensitive match
     cursor.execute("SELECT unit_id FROM colleges WHERE name ILIKE %s;", [lookup])
@@ -92,6 +92,12 @@ def resolve_college_id(cursor, clippd_school_name):
     
     return None
 
+def resolve_program_id(cursor, clippd_school_id):
+    # get our internal database id for the given clippd_id
+    cursor.execute("SELECT id FROM programs WHERE clippd_id = %s;", [clippd_school_id])
+    result = cursor.fetchone()
+    return result[0] if result else None
+
 def fetch_rankings_page(type_param, gender, division, limit, offset):
     # helper function to fetch the rankings api
     params = {
@@ -121,6 +127,7 @@ def fetch_rankings_page(type_param, gender, division, limit, offset):
         return None
 
 
+# Core pipeline functions
 def ingest_all_rankings(type_param):
     # get the rankings across all divisions and genders
     if not type_param in ("Team", "Player"):
@@ -173,7 +180,6 @@ def ingest_all_rankings(type_param):
     print(f"Total {type_param}s retrieved: {len(all_rankings)}")
     
     return all_rankings
-        
         
 # Check local json cache before calling ingesting all programs
 def get_rankings_data(type_param):
@@ -263,8 +269,8 @@ def seed_program_rankings():
                 %(college_id)s, %(clippd_id)s, %(gender)s, %(name)s, %(conference)s, %(division)s, %(head_coach)s,
                 %(rank)s, %(scoring_avg)s, %(adjusted_scoring_avg)s, %(top3_finishes)s, %(total_rounds)s, %(win_loss_tie)s, %(wins)s
             )
-            ON CONFLICT (college_id, gender) DO UPDATE SET
-                clippd_id = EXCLUDED.clippd_id,
+            ON CONFLICT (clippd_id) DO UPDATE SET
+                college_id = EXCLUDED.college_id,
                 name = EXCLUDED.name,
                 conference = EXCLUDED.conference,
                 division = EXCLUDED.division,
@@ -278,9 +284,9 @@ def seed_program_rankings():
         """
         
         cursor.execute(upsert_query, program_record)
+        conn.commit()
         
-    conn.commit()
-    print("Ingestion complete! Record resolved and upserted successfully")
+    print("Ingestion complete! Team records resolved and upserted successfully!")
     
     cursor.close()
     conn.close()
@@ -303,13 +309,19 @@ def seed_player_rankings():
     for item in api_payload:
         name = item.get("playerName")
 
-        program_id = item.get("schoolId")
+        program_clippd_id = item.get("schoolId")
         player_id = item.get("playerId")
+        
+        program_uuid = resolve_program_id(cursor, program_clippd_id)
+        program_name = item.get("schoolName")
+        if not program_uuid:
+            print(f"Could not resolve program uuid for player id: {player_id} player name: {name} program clippd id: {program_clippd_id} program name: {program_name}")
+            continue
             
         total_rounds = int(item.get("strokePlayRounds", 0)) + int(item.get("matchPlayRounds", 0))
             
         player_record = {
-            "program_id": program_id,
+            "program_uuid": program_uuid,
             "clippd_id": player_id,
             "name": name,
             "rank": item.get("rank"),
@@ -323,15 +335,14 @@ def seed_player_rankings():
         }
             
         upsert_query = """
-            INSERT INTO programs (
-                program_id, clippd_id, name, rank, scoring_avg, adjusted_scoring_avg, top3_finishes, total_rounds, win_loss_tie, wins, graduation_year
+            INSERT INTO players (
+                program_uuid, clippd_id, name, rank, scoring_avg, adjusted_scoring_avg, top3_finishes, total_rounds, win_loss_tie, wins, graduation_year
             ) VALUES (
-                %(program_id)s, %(clippd_id)s, %(name)s, %(rank)s, %(scoring_avg)s, %(adjusted_scoring_avg)s,
+                %(program_uuid)s, %(clippd_id)s, %(name)s, %(rank)s, %(scoring_avg)s, %(adjusted_scoring_avg)s,
                 %(top3_finishes)s, %(total_rounds)s, %(win_loss_tie)s, %(wins)s, %(graduation_year)s
             )
-            ON CONFLICT (college_id, gender) DO UPDATE SET
-                program_id = EXCLUDED.program_id,
-                clippd_id = EXCLUDED.clippd_id,
+            ON CONFLICT (clippd_id) DO UPDATE SET
+                program_uuid = EXCLUDED.program_uuid,
                 name = EXCLUDED.name,
                 rank = EXCLUDED.rank,
                 scoring_avg = EXCLUDED.scoring_avg,
@@ -343,9 +354,9 @@ def seed_player_rankings():
         """
             
         cursor.execute(upsert_query, player_record)
+        conn.commit()
             
-    conn.commit()
-    print("Ingestion complete! Record resolved and upserted successfully")
+    print("Ingestion complete! Player records resolved and upserted successfully!")
         
     cursor.close()
     conn.close()
