@@ -123,20 +123,20 @@ CREATE TABLE programs (
     division division_type NULL,
     head_coach VARCHAR(255) NULL,
     rank INT NULL,
-    scoring_avg NUMERIC(15, 13) NULL,
-    adjusted_scoring_avg NUMERIC(15, 13) NULL,
+    scoring_avg NUMERIC(18, 13) NULL,
+    adjusted_scoring_avg NUMERIC(18, 13) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL,
 
-    CONSTRAINT unique_program_gender UNIQUE (college_id, gender)
+    CONSTRAINT unique_program UNIQUE (clippd_id)
 );
 
 CREATE TABLE program_events (
     id SERIAL PRIMARY KEY,
-    program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
+    program_uuid UUID REFERENCES programs(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(10) NULL,
     score VARCHAR(10) NULL,
@@ -150,12 +150,12 @@ CREATE TABLE program_events (
 
 CREATE TABLE players (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    program_id UUID REFERENCES programs(id) ON DELETE CASCADE,
+    program_uuid UUID REFERENCES programs(id) ON DELETE CASCADE,
     clippd_id VARCHAR(50) UNIQUE NULL,
     name VARCHAR(255) NOT NULL,
     rank INT NULL,
-    scoring_avg NUMERIC(15, 13) NULL,
-    adjusted_scoring_avg NUMERIC(15, 13) NULL,
+    scoring_avg NUMERIC(18, 13) NULL,
+    adjusted_scoring_avg NUMERIC(18, 13) NULL,
     top3_finishes INT NULL,
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
@@ -166,7 +166,7 @@ CREATE TABLE players (
 
 CREATE TABLE player_events (
     id SERIAL PRIMARY KEY,
-    player_id UUID REFERENCES players(id) ON DELETE CASCADE,
+    player_uuid UUID REFERENCES players(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     position VARCHAR(10) NULL,
     score VARCHAR(10) NULL,
