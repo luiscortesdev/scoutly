@@ -76,7 +76,7 @@ CREATE TABLE colleges (
     opeid6 VARCHAR(50) NULL,
     name VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
-    state CHAR(2) NOT NULL,
+    state CHAR(10) NOT NULL,
     zip VARCHAR(20) NOT NULL,
     accreditation_agency VARCHAR(255) NULL,
     institution_url VARCHAR(255) NULL,
