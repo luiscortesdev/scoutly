@@ -3,30 +3,21 @@
 
     "Anderson University (SC)": 217633,               
     "Anderson University (IN)": 150066,        
-    "Bethel University (MN)": 173151,            
-    "Bethel University (IN)": 150136,          
-    "Bethel University (TN)": 219976,            
-    "University of St. Thomas - Minnesota": 174914,         
-    "University of St. Thomas - Texas": 228146,        
-    "Marian University (WI)": 239105,            
-    "Marian University (IN)": 151810,          
+    "Bethel University (MN)": 173160,            
+    "Bethel University (IN)": 150145,          
+    "Bethel University (TN)": 219718,            
+    "University of St. Thomas - Minnesota": 174817,         
+    "University of St. Thomas - Texas": 227863,        
+    "Marian University (WI)": 239080,            
+    "Marian University (IN)": 151786,          
     "Columbia College - Missouri": 177065,      
-    "Columbia College - South Carolina": 217873,      
-    "Concordia University St. Paul": 173258,     
-    "Concordia University Wisconsin": 238713,    
-    "Concordia University Nebraska": 180947,    
-    "Trinity University (Texas)": 229407,    
+    "Columbia College - South Carolina": 217934,      
+    "Concordia University St. Paul": 173328,     
+    "Concordia University Wisconsin": 238616,    
+    "Concordia University Nebraska": 180984,    
+    "Trinity University (Texas)": 229267,    
     "Embry-Riddle Aeronautical University (FL)": 133553, 
-    "Embry-Riddle Aeronautical University (AZ)": 104443,  
-    
-
-    "canadian universities matched to our custom sql ids": "comment",
-
-    "Simon Fraser University": 999901,
-    "University of Victoria": 999902,
-    "University of British Columbia": 999903,
-    "Bishop University - Quebec": 999904,
-
+    "Embry-Riddle Aeronautical University (AZ)": 104586,
 
     "lexical disconnects that always need to be manually resolved": "comment",
 
