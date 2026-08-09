@@ -187,7 +187,7 @@ def get_rankings_data(type_param):
         print(f"Please provide a valid of type of 'Team' or 'Player'!")
         return None
         
-    cache_file  = PROGRAM_CACHE_FILE_PATH if type_param == "Team" else PLAYER_CACHE_FILE_PATH
+    cache_file = PROGRAM_CACHE_FILE_PATH if type_param == "Team" else PLAYER_CACHE_FILE_PATH
     
     if os.path.exists(cache_file):
         file_age = time.time() - os.path.getmtime(cache_file)
