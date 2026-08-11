@@ -17,6 +17,7 @@ FALLBACK_DATA_URL = "https://ed-public-download.scorecard.network/downloads/Most
 
 CACHE_DATA_DIR = os.path.join("database", ".cache")
 LOCAL_CSV_PATH = os.path.join(CACHE_DATA_DIR, "Most-Recent-Cohorts-Institution.csv")
+CANADIAN_CSV_PATH = os.path.join("database", "seed_data", "canadian_colleges.csv")
 TEMP_ZIP_PATH = "temp_scorecard.zip"
 
 load_dotenv()
@@ -28,27 +29,6 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 os.makedirs(CACHE_DATA_DIR, exist_ok=True)
-
-# columns in our schema we must place data into
-COLLEGE_COLUMNS = [
-    "unit_id", "opeid", "opeid6", "name", "city", "state", "zip", 
-    "accreditation_agency", "institution_url", "net_price_calculator_url", 
-    "is_main_campus", "region", "locale", "latitude", "longitude", "admissions_rate", 
-    "sat_reading_25th", "sat_reading_75th", "sat_reading_50th", 
-    "sat_math_25th", "sat_math_75th", "sat_math_50th", 
-    "sat_total_25th", "sat_total_75th", "sat_total_50th", "sat_avg", 
-    "act_25th", "act_75th", "act_50th", 
-    "undergrad_size", "graduate_size", "in_state_tuition", "out_of_state_tuition", 
-    "school_type", "address", "median_earnings_9yrs"
-]
-# hard code canadian colleges since the US D.O.E. does not include them
-CANADIAN_SCHOOLS = [
-    {"unit_id": 999901, "name": "Simon Fraser University", "city": "Burnaby", "state": "BC", "zip": "V5A 1S6", "institution_url": "sfu.ca"},
-    {"unit_id": 999902, "name": "University of Victoria", "city": "Victoria", "state": "BC", "zip": "V8W 2Y2", "institution_url": "uvic.ca"},
-    {"unit_id": 999903, "name": "University of British Columbia", "city": "Vancouver", "state": "BC", "zip": "V6T 1Z4", "institution_url": "ubc.ca"},
-    {"unit_id": 999904, "name": "Bishops University - Quebec", "city": "Sherbrooke", "state": "QC", "zip": "J1M 1Z7", "institution_url": "ubishops.ca"}
-]
-
 
 def get_download_url():
     try:
@@ -178,27 +158,6 @@ def clean_numeric_value(val):
     except ValueError:
         return None
     
-def build_canadian_college_row(unit_id, name, city="Unknown City", state="Canada", zip_code="Unknown", url=None, school_type="public"):
-    # dynmaically build table rows for the canadian colleges
-    
-    # create an empty dictionary with all of the college columns
-    row_dict = {col: None for col in COLLEGE_COLUMNS}
-    
-    # update the fields we know for the canadian schools
-    row_dict.update({
-        "unit_id": unit_id,
-        "name": name,
-        "city": city,
-        "state": state,
-        "zip": zip_code,
-        "is_main_campus": True,
-        "school_type": school_type,
-        "institution_url": url
-    })
-    
-    # donvert dict to tuple
-    return tuple(row_dict[col] for col in COLLEGE_COLUMNS)
-    
 
 def process_data(file_path):
     # process the csv file with pandas
@@ -212,8 +171,16 @@ def process_data(file_path):
         "ACTCM25", "ACTCM75", "ACTCMMID", "UGDS", "GRADS", "TUITIONFEE_IN", "TUITIONFEE_OUT", "MD_EARN_WNE_P9",
     ]
     
-    # only read the columns we need
-    df = pd.read_csv(file_path, usecols=columns_to_extract, low_memory=False)
+    # only read the columns we need from the usa colleges csv
+    df_us = pd.read_csv(file_path, usecols=columns_to_extract, low_memory=False)
+    
+    if os.path.exists(CANADIAN_CSV_PATH):
+        df_canada = pd.read_csv(CANADIAN_CSV_PATH)
+        df = pd.concat([df_us, df_canada], ignore_index=True)
+        print("Successfully combined USA and Canada datasets")
+    else:
+        print("Canadian colleges CSV not found. Seeding USA college data only")
+        df = df_us
     
     # clean up possibly empty values
     df["INSTNM"] = df["INSTNM"].fillna("Unknown School")
@@ -287,18 +254,6 @@ def process_data(file_path):
             row["school_type"],
             str(row["ADDR"]), # Street address (seeded as NULL)
             clean_numeric_value(row["MD_EARN_WNE_P9"])  # Median earnings (seeded as NULL)
-        )
-        cleaned_rows.append(cleaned_row)
-        
-    # process canadian colleges we hardcoded
-    for school in CANADIAN_SCHOOLS:
-        cleaned_row = build_canadian_college_row(
-            unit_id=school["unit_id"],
-            name=school["name"],
-            city=school["city"],
-            state=school["state"],
-            zip_code=school["zip"],
-            url=school["institution_url"]
         )
         cleaned_rows.append(cleaned_row)
 
