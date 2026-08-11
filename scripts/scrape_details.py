@@ -1,9 +1,9 @@
 import os
 import re
 import time
-import requests
 import psycopg2
 from bs4 import BeautifulSoup
+from playwright.sync_api import sync_playwright
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,10 +14,7 @@ DB_NAME = os.getenv("DB_NAME", "scoutly")
 DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-}
-    
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # orchestration functions
 def scrape_program_details():
@@ -33,28 +30,23 @@ def scrape_program_details():
     cursor.execute("SELECT id, clippd_id, name FROM programs WHERE clippd_id LIKE '%2883%';")
     programs = cursor.fetchall()
     
-    for program_id, clippd_id, name in programs:
-        if not clippd_id:
-            continue
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(user_agent=USER_AGENT)
         
-        program_url = f"https://scoreboard.clippd.com/teams/{clippd_id}?season=2026"
+        for program_id, clippd_id, name in programs:
         
-        try:
-            # fetch program html
-            response = requests.get(program_url, headers=HEADERS, timeout=10)
+            program_url = f"https://scoreboard.clippd.com/teams/{clippd_id}?season=2026"
             
-            if response.status_code != 200:
-                # server did not response properly
-                print(f"Could not fetch name: {name} and clippd_id: {clippd_id}")
-                continue
-            
-            html = response.text
-            
-            print(parse_head_coach(html))
-            
-        except Exception as e:
-            print(f"Error fetching id {clippd_id}: {e}")
-            conn.rollback()        
+            try:
+                response = page.goto(program_url, wait_until="networkidle", timeout=15000)
+                
+                print(response.status())
+                html_content = page.content()
+                
+            except Exception as e:
+                print(f"Error fetching id {clippd_id}: {e}")
+                conn.rollback()        
 
 if __name__ == "__main__":
     scrape_program_details()
