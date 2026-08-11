@@ -93,8 +93,6 @@ def scrape_program_details():
                     cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
                     print(f"Updated {name} head coach to {coach}")
                 
-                
-                
                 conn.commit()
 
                 
@@ -104,7 +102,6 @@ def scrape_program_details():
                 conn.rollback()
         
         page.close()
-        os._exit(0)
         browser.close()
 
     cursor.close()
