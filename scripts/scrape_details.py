@@ -34,13 +34,25 @@ def parse_head_coach(html_content):
 
 # playwright configuration
 def configure_page_route(page):
-    # abort background network traffic
-    page.route("**/*sentry*", lambda route: route.abort())
-    page.route("**/*google-analytics*", lambda route: route.abort())
-    page.route("**/*hotjar*", lambda route: route.abort())
-    page.route("**/*doubleclick*", lambda route: route.abort())
+    def handle_route(route, request):
+        url = request.url
+        resource_type = request.resource_type
+        
+        blocked_trackers = ["sentry", "google.analytics", "hotjar", "doubleclick", "quantserve", "intergient", "rapidedge", "quantcount"]
+        blocked_assets = ["image", "font", "media"]
+        
+        # match to our block lists
+        if any(tracker in url.lower() for tracker in blocked_trackers):
+            route.abort()
+        elif resource_type in blocked_assets:
+            route.abort()
+        else:
+            route.continue_()
+
+    page.route("**/*", handle_route)
 
 def scrape_program_details():
+    print("Connecting to database...")
     conn = psycopg2.connect(
         host=DB_BIND_ADDRESS,
         port=DB_PORT,
@@ -48,37 +60,56 @@ def scrape_program_details():
         user=DB_USER,
         password=DB_PASSWORD
     )
-    
     cursor = conn.cursor()
-    cursor.execute("SELECT id, clippd_id, name FROM programs WHERE clippd_id LIKE '%2883%';")
+    
+    cursor.execute("SELECT id, clippd_id, name FROM programs WHERE clippd_id LIKE '%%2483%%';")
     programs = cursor.fetchall()
     
+    print(f"Found {len(programs)} program(s) to process.")
+    if not programs:
+        cursor.close()
+        conn.close()
+        return
+
+    # Using sync_playwright as a standard flat context manager
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(user_agent=USER_AGENT)
         
-        configure_page_route(page) # apply telemetry blockers
+        # Create a single context and page OUTSIDE the loop to prevent process leaks
+        page = browser.new_page(user_agent=USER_AGENT)
+        configure_page_route(page)
         
         for program_id, clippd_id, name in programs:
-        
             program_url = f"https://scoreboard.clippd.com/teams/{clippd_id}?season=2026"
             
             try:
-                page.goto(program_url, wait_until="load", timeout=15000)
-                page.wait_for_selector("main", timeout=5000) # wait for the main content to load before parsing
+                page.goto(program_url, wait_until="domcontentloaded", timeout=15000)
+                page.wait_for_selector("main", timeout=5000)
                 
                 html_content = page.content()
-                #with open(HTML_FILE, "w", encoding="utf-8") as file:
-                    #file.write(html_content)
                 
                 coach = parse_head_coach(html_content)
-                print(coach)
+                if coach:
+                    cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
+                    print(f"Updated {name} head coach to {coach}")
+                
+                
+                
+                conn.commit()
+
                 
             except Exception as e:
-                print(f"Error fetching id {clippd_id}: {e}")
-                conn.rollback()   
-                
+                (f"Error fetching id {clippd_id}: {e}")
+
+                conn.rollback()
+        
+        page.close()
+        os._exit(0)
         browser.close()
+
+    cursor.close()
+    conn.close()
+
 
 if __name__ == "__main__":
     scrape_program_details()
