@@ -144,6 +144,7 @@ CREATE TABLE program_events (
     event_sg NUMERIC(6, 3) NULL DEFAULT 0,
     total_points NUMERIC(6, 3) NULL DEFAULT 0,
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
+    total_rounds INT NULL,
     start_date DATE NULL DEFAULT CURRENT_DATE,
     end_date DATE NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -175,6 +176,7 @@ CREATE TABLE player_events (
     event_sg NUMERIC(6, 3) NULL DEFAULT 0,
     total_points NUMERIC(6, 3) NULL DEFAULT 0,
     weighted_points NUMERIC(6, 3) NULL DEFAULT 0,
+    total_rounds INT NULL,
     start_date DATE NULL DEFAULT CURRENT_DATE,
     end_date DATE NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
