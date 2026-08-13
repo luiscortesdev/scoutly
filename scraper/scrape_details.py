@@ -132,7 +132,8 @@ def parse_events(soup):
             # some event rows contain the field size and position within a p tag
             position_cell_p_tag = position_cell.find("p")
             if position_cell_p_tag:
-                position_cell_strings = list(position_cell.find("p").stripped_strings)
+                position_cell_strings = list(position_cell_p_tag.stripped_strings)
+                
                 position = position_cell_strings[0]
                 field_size = position_cell_strings[2]
                 
@@ -142,6 +143,13 @@ def parse_events(soup):
             event_sg_cell = cells[3]
             event_sg = event_sg_cell.text
             
+            total_points_cell = cells[4]
+            total_points_cell_p_tag = total_points_cell.find("p")
+            if total_points_cell_p_tag:
+                total_points_cell_strings = list(total_points_cell_p_tag.stripped_strings)
+                
+                total_points = round(float(total_points_cell_strings[0]), 3)
+                total_rounds = int(total_points_cell_strings[1])
             
         except Exception as e:
             print(f"Error: {e}")
