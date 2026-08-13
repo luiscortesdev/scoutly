@@ -37,12 +37,29 @@ def parse_events(soup):
     rows = soup.find_all("tr")
     
     for row in rows:
-        row_soup = BeautifulSoup(row, "html.parser")
-        
-        cells = row_soup.find_all("td")
+        cells = row.find_all("td")
         
         if len(cells) < 6:
             continue
+        
+        try:
+            info_cell = cells[0]
+            span_tags = info_cell.find_all("span")
+            
+            name_span = span_tags[0]
+            name = name_span.text.strip() if name_span else None
+            if not name:
+                img_tag = info_cell.find("img")
+                name = img_tag.get("alt", "").strip() if img_tag else "Unknown Tournament"
+                
+            date_span = span_tags[1]
+            date_str = date_span.text.strip() if date_span else None
+            
+            print(date_str, name)
+            
+            
+        except Exception as e:
+            print(f"Error: {e}")
             
 
 # playwright configuration
