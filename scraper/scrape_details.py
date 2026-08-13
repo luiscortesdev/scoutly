@@ -139,6 +139,9 @@ def parse_events(soup):
             score_cell = cells[2]
             score = score_cell.text
             
+            event_sg_cell = cells[3]
+            event_sg = event_sg_cell.text
+            
             
         except Exception as e:
             print(f"Error: {e}")
