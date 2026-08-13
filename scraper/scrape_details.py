@@ -20,8 +20,7 @@ HTML_FILE = os.path.join(CACHE_DIR, "program.html")
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # parsing functions
-def parse_head_coach(html_content):
-    soup = BeautifulSoup(html_content, "html.parser")
+def parse_head_coach(soup):
     
     coach_label = soup.find(string=re.compile(r"Head Coach", re.IGNORECASE))
     
@@ -31,6 +30,20 @@ def parse_head_coach(html_content):
             return coach_name.text.strip()
         
     return None
+
+def parse_events(soup):
+    events = []
+    
+    rows = soup.find_all("tr")
+    
+    for row in rows:
+        row_soup = BeautifulSoup(row, "html.parser")
+        
+        cells = row_soup.find_all("td")
+        
+        if len(cells) < 6:
+            continue
+            
 
 # playwright configuration
 def configure_page_route(page):
@@ -87,11 +100,14 @@ def scrape_program_details():
                 page.wait_for_selector("main", timeout=5000)
                 
                 html_content = page.content()
+                soup = BeautifulSoup(html_content, "html.parser")
                 
-                coach = parse_head_coach(html_content)
+                coach = parse_head_coach(soup)
                 if coach:
                     cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
                     print(f"Updated {name} head coach to {coach}")
+                    
+                events = parse_events(soup)
                 
                 conn.commit()
 
