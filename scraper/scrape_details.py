@@ -1,6 +1,7 @@
 import os
 import re
 import time
+from datetime import date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 import psycopg2
@@ -20,6 +21,73 @@ HTML_FILE = os.path.join(CACHE_DIR, "program.html")
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 # parsing functions
+def parse_date_str(date_str):
+    if not date_str:
+        return None, None
+    
+    def parse_mm_dd(mm_dd_str):
+        mm_str = mm_dd_str.split(" ")[0]
+        dd_str = mm_dd_str.split(" ")[1]
+        
+        mm = None
+        match mm_str:
+            case "jan":
+                mm = 1
+            case "feb":
+                mm = 2
+            case "mar":
+                mm = 3
+            case "apr":
+                mm = 4
+            case "may":
+                mm = 5
+            case "jun":
+                mm = 6
+            case "jul":
+                mm = 7
+            case "aug":
+                mm = 8
+            case "sep":
+                mm = 9
+            case "oct":
+                mm = 10
+            case "nov":
+                mm = 11
+            case "dec":
+                mm = 12
+                
+        dd = None
+        if dd_str:
+            try:
+                dd = int(dd_str)
+            except ValueError:
+                pass
+            
+        return mm, dd
+    
+    comma_split = date_str.split(",")
+    
+    day_month_str = comma_split[0].lower().strip()
+    
+    start_date_str = day_month_str.split("-")[0].lower().strip()
+    end_date_str = day_month_str.split("-")[1].lower().strip()
+    
+    start_date_mm, start_date_dd = parse_mm_dd(start_date_str)
+    end_date_mm, end_date_dd = parse_mm_dd(end_date_str)
+    
+    year_str = comma_split[1].strip()
+    year = None
+    if year_str:
+        try:
+            year = int(year_str)
+        except ValueError:
+            pass
+    
+    start_date = date(year, start_date_mm, start_date_dd)
+    end_date = date(year, end_date_mm, end_date_dd)
+    
+    return start_date, end_date
+
 def parse_head_coach(soup):
     
     coach_label = soup.find(string=re.compile(r"Head Coach", re.IGNORECASE))
@@ -55,7 +123,7 @@ def parse_events(soup):
             date_span = span_tags[1]
             date_str = date_span.text.strip() if date_span else None
             
-            print(date_str, name)
+            start_date, end_date = parse_date_str(date_str)
             
             
         except Exception as e:
