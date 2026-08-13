@@ -125,6 +125,16 @@ def parse_events(soup):
             
             start_date, end_date = parse_date_str(date_str)
             
+            position_cell = cells[1]
+            position = position_cell.text
+            field_size = None
+            
+            # some event rows contain the field size and position within a p tag
+            position_cell_p_tag = position_cell.find("p")
+            if position_cell_p_tag:
+                position_cell_strings = list(position_cell.find("p").stripped_strings)
+                position = position_cell_strings[0]
+                field_size = position_cell_strings[2]            
             
         except Exception as e:
             print(f"Error: {e}")
