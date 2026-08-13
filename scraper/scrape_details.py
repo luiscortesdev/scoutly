@@ -134,7 +134,11 @@ def parse_events(soup):
             if position_cell_p_tag:
                 position_cell_strings = list(position_cell.find("p").stripped_strings)
                 position = position_cell_strings[0]
-                field_size = position_cell_strings[2]            
+                field_size = position_cell_strings[2]
+                
+            score_cell = cells[2]
+            score = score_cell.text
+            
             
         except Exception as e:
             print(f"Error: {e}")
