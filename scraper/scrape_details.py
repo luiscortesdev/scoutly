@@ -16,7 +16,6 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 CACHE_DIR = os.path.join("database", ".cache")
-HTML_FILE = os.path.join(CACHE_DIR, "program.html")
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
