@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import time
 from datetime import date
 from bs4 import BeautifulSoup
@@ -17,10 +18,26 @@ DB_USER = os.getenv("DB_USER", "scoutly_admin")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password")
 
 CACHE_DIR = os.path.join("scraper", ".cache")
+PROGRAM_DETAILS_CACHE_PATH = os.path.join(CACHE_DIR, "clippd_program_details.json")
+PLAYER_DETAILS_CACHE_PATH = os.path.join(CACHE_DIR, "clippd_player_details.json")
 
-PROGRAM_DETAILS_CACHE = os.path.join(CACHE_DIR, "")
+os.makedirs(CACHE_DIR, exist_ok=True)
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+# helper cache functions
+def load_json_cache(file_path):
+    if os.path.exists(file_path):
+        with open(file_path) as f:
+            return json.load(f)
+
+    return {}
+
+def save_json_cache(file_path, data):
+    if os.path.exists(file_path):
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
 
 # parsing functions
 def parse_date_str(date_str):
