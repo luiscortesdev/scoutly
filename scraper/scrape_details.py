@@ -5,6 +5,7 @@ from datetime import date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 import psycopg2
+from psycopg2.extras import execute_values
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -168,10 +169,11 @@ def parse_events(soup, uuid):
             )
 
             events.append(event_tuple)
-
-            
+        
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error parsing event row: {e}")
+
+    return events
             
 
 # playwright configuration
@@ -235,15 +237,28 @@ def scrape_program_details():
                 if coach:
                     cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
                     print(f"Updated {name} head coach to {coach}")
-                    
-                events = parse_events(soup)
-                
+
+                events = parse_events(soup, program_id)
+
+                # we delete and reload events to ensure up to date events for the programs
+                if events:
+                    cursor.execute("DELETE FROM program_events WHERE program_uuid = %s;", [program_id])
+
+                    events_insert_query = """
+                        INSERT INTO program_events (
+                            program_uuid, name, position, field_size, score, 
+                            event_sg, total_points, weighted_points, total_rounds, 
+                            start_date, end_date
+                        ) VALUES %s;
+                    """
+
+                    execute_values(cursor, events_insert_query, events)
+                    print(f"Reloaded {len(events)} events for {name}.")
+
                 conn.commit()
 
-                
             except Exception as e:
                 (f"Error fetching id {clippd_id}: {e}")
-
                 conn.rollback()
         
         page.close()
