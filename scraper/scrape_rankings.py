@@ -149,7 +149,7 @@ def ingest_all_rankings(type_param):
     
     all_rankings = []
     
-    print("Beginning Clippd API ingestion for programs...")
+    print(f"Beginning Clippd API ingestion for {type_param}...")
     
     for gen in genders:
         for div in divisions:
