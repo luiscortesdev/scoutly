@@ -76,11 +76,15 @@ def parse_date_str(date_str):
             year = int(year_str)
         except ValueError:
             pass
-    
-    start_date = date(year, start_date_mm, start_date_dd)
-    end_date = date(year, end_date_mm, end_date_dd)
-    
-    return start_date, end_date
+
+    try:
+        start_date = date(year, start_date_mm, start_date_dd)
+        end_date = date(year, end_date_mm, end_date_dd)
+        
+        return start_date, end_date
+    except Exception:
+        print(f"Error parsing start and end date for event")
+        return None, None
 
 def parse_head_coach(soup):
     coach_label = soup.find(string=re.compile(r"Head Coach", re.IGNORECASE))
