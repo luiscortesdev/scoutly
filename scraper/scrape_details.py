@@ -98,7 +98,7 @@ def parse_head_coach(soup):
         
     return None
 
-def parse_events(soup):
+def parse_events(soup, uuid):
     events = []
     
     rows = soup.find_all("tr")
@@ -149,6 +149,26 @@ def parse_events(soup):
                 
                 total_points = round(float(total_points_cell_strings[0]), 3)
                 total_rounds = int(total_points_cell_strings[1])
+
+            weighted_points_cell = cells[5]
+            weighted_points = weighted_points_cell.text
+
+            event_tuple = (
+                uuid,
+                name,
+                position,
+                field_size,
+                score,
+                event_sg,
+                total_points,
+                weighted_points,
+                total_rounds,
+                start_date,
+                end_date
+            )
+
+            events.append(event_tuple)
+
             
         except Exception as e:
             print(f"Error: {e}")
