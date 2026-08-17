@@ -135,18 +135,27 @@ def parse_events(soup, uuid):
             score = score_cell.text
             
             event_sg_cell = cells[3]
-            event_sg = event_sg_cell.text
+            event_sg_text = event_sg_cell.text.strip()
+            event_sg_cleaned = re.sub(r"[^\d\.-]", "", event_sg_text)
+            event_sg = float(event_sg_cleaned) if event_sg_cleaned else 0.0
             
             total_points_cell = cells[4]
             total_points_cell_p_tag = total_points_cell.find("p")
             if total_points_cell_p_tag:
                 total_points_cell_strings = list(total_points_cell_p_tag.stripped_strings)
-                
-                total_points = round(float(total_points_cell_strings[0]), 3)
-                total_rounds = int(total_points_cell_strings[1])
+
+                total_points_cleaned = re.sub(r"[^\d\.-]", "", total_points_cell_strings[0])
+                total_points = round(float(total_points_cleaned), 3) if total_points_cleaned else 0.0
+
+                # ensure that the rounds string exists
+                if len(total_points_cell_strings) > 1:
+                    total_rounds_cleaned = re.sub(r"[^\d]", "", total_points_cell_strings[1])
+                    total_rounds = int(total_rounds_cleaned) if total_rounds_cleaned else 0
 
             weighted_points_cell = cells[5]
-            weighted_points = weighted_points_cell.text
+            weighted_points_text = weighted_points_cell.text.strip()
+            weighted_points_cleaned = re.sub(r"[^\d\.-]", "", weighted_points_text)
+            weighted_points = float(weighted_points_cleaned) if weighted_points_cleaned else 0.0
 
             event_tuple = (
                 uuid,
