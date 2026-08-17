@@ -83,7 +83,6 @@ def parse_date_str(date_str):
     return start_date, end_date
 
 def parse_head_coach(soup):
-    
     coach_label = soup.find(string=re.compile(r"Head Coach", re.IGNORECASE))
     
     if coach_label:
@@ -92,6 +91,14 @@ def parse_head_coach(soup):
             return coach_name.text.strip()
         
     return None
+
+def parse_graduation_year(soup):
+    school_year_label = soup.find(string=re.compile(r"School Year", re.IGNORECASE))
+
+    if school_year_label:
+        graduation_year_label = school_year_label.find_next()
+        if graduation_year_label:
+            return graduation_year_label.text.strip()
 
 def parse_events(soup, uuid):
     events = []
@@ -170,7 +177,7 @@ def parse_events(soup, uuid):
                 start_date,
                 end_date
             )
-            print(event_tuple)
+
             events.append(event_tuple)
         
         except Exception as e:
@@ -310,6 +317,14 @@ def scrape_player_details():
 
                 events = parse_events(soup, player_id)
 
+                graduation_year = parse_graduation_year(soup)
+                if graduation_year:
+                    try:
+                        cursor.execute("UPDATE players SET graduation_year = %s WHERE id = %s;", [graduation_year, player_id])
+                        print(f"Updated {name} grad year to {graduation_year}")
+                    except Exception as e:
+                        print(f"Error updating player grad year {e}")
+
                 # we delete and reload events to ensure up to date events for the programs
                 if events:
                     cursor.execute("DELETE FROM player_events WHERE player_uuid = %s;", [player_id])
@@ -338,5 +353,5 @@ def scrape_player_details():
     conn.close()
 
 if __name__ == "__main__":
-    scrape_program_details()
+    #scrape_program_details()
     scrape_player_details()
