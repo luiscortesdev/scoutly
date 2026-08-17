@@ -170,7 +170,7 @@ def parse_events(soup, uuid):
                 start_date,
                 end_date
             )
-
+            print(event_tuple)
             events.append(event_tuple)
         
         except Exception as e:
@@ -209,10 +209,10 @@ def scrape_program_details():
     )
     cursor = conn.cursor()
     
-    cursor.execute("SELECT id, clippd_id, name FROM programs WHERE clippd_id LIKE '%%2483%%';")
+    cursor.execute("SELECT id, clippd_id, name FROM programs WHERE clippd_id LIKE '%%3070%%';")
     programs = cursor.fetchall()
     
-    print(f"Found {len(programs)} program(s) to process.")
+    print(f"Found {len(programs)} programs to process.")
     if not programs:
         cursor.close()
         conn.close()
@@ -270,6 +270,73 @@ def scrape_program_details():
     cursor.close()
     conn.close()
 
+def scrape_player_details():
+    print("Connecting to database...")
+    conn = psycopg2.connect(
+        host=DB_BIND_ADDRESS,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT id, clippd_id, name FROM players WHERE clippd_id LIKE '%%19552%%';")
+    players = cursor.fetchall()
+    
+    print(f"Found {len(players)} players to process.")
+    if not players:
+        cursor.close()
+        conn.close()
+        return
+
+    # Using sync_playwright as a standard flat context manager
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        
+        # Create a single context and page OUTSIDE the loop to prevent process leaks
+        page = browser.new_page(user_agent=USER_AGENT)
+        configure_page_route(page)
+        
+        for player_id, clippd_id, name in players:
+            player_url = f"https://scoreboard.clippd.com/players/{clippd_id}?season=2026"
+            
+            try:
+                page.goto(player_url, wait_until="domcontentloaded", timeout=15000)
+                page.wait_for_selector("main", timeout=5000)
+                
+                html_content = page.content()
+                soup = BeautifulSoup(html_content, "html.parser")
+
+                events = parse_events(soup, player_id)
+
+                # we delete and reload events to ensure up to date events for the programs
+                if events:
+                    cursor.execute("DELETE FROM player_events WHERE player_uuid = %s;", [player_id])
+
+                    events_insert_query = """
+                        INSERT INTO player_events (
+                            player_uuid, name, position, field_size, score, 
+                            event_sg, total_points, weighted_points, total_rounds, 
+                            start_date, end_date
+                        ) VALUES %s;
+                    """
+
+                    execute_values(cursor, events_insert_query, events)
+                    print(f"Reloaded {len(events)} events for {name}.")
+
+                conn.commit()
+
+            except Exception as e:
+                (f"Error fetching id {clippd_id}: {e}")
+                conn.rollback()
+        
+        page.close()
+        browser.close()
+
+    cursor.close()
+    conn.close()
 
 if __name__ == "__main__":
     scrape_program_details()
+    scrape_player_details()
