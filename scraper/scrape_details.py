@@ -22,7 +22,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 # parsing functions
 def parse_date_str(date_str):
-    if not date_str:
+    if not date_str or not "," in date_str:
         return None, None
     
     def parse_mm_dd(mm_dd_str):
@@ -31,30 +31,18 @@ def parse_date_str(date_str):
         
         mm = None
         match mm_str:
-            case "jan":
-                mm = 1
-            case "feb":
-                mm = 2
-            case "mar":
-                mm = 3
-            case "apr":
-                mm = 4
-            case "may":
-                mm = 5
-            case "jun":
-                mm = 6
-            case "jul":
-                mm = 7
-            case "aug":
-                mm = 8
-            case "sep":
-                mm = 9
-            case "oct":
-                mm = 10
-            case "nov":
-                mm = 11
-            case "dec":
-                mm = 12
+            case "jan": mm = 1
+            case "feb": mm = 2
+            case "mar": mm = 3
+            case "apr": mm = 4
+            case "may": mm = 5
+            case "jun": mm = 6
+            case "jul": mm = 7
+            case "aug": mm = 8
+            case "sep": mm = 9
+            case "oct": mm = 10
+            case "nov": mm = 11
+            case "dec": mm = 12
                 
         dd = None
         if dd_str:
