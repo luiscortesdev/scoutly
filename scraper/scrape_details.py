@@ -245,8 +245,11 @@ def scrape_program_details():
                 
                 coach = parse_head_coach(soup)
                 if coach:
-                    cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
-                    print(f"Updated {name} head coach to {coach}")
+                    try:
+                        cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
+                        print(f"Updated {name} head coach to {coach}")
+                    except Exception as e:
+                        print(f"Error updating head coach {e}")
 
                 events = parse_events(soup, program_id)
 
