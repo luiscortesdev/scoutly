@@ -2,7 +2,7 @@ import os
 import re
 import json
 import time
-from datetime import date
+from datetime import datetime, date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 import psycopg2
@@ -34,9 +34,8 @@ def load_json_cache(file_path):
     return {}
 
 def save_json_cache(file_path, data):
-    if os.path.exists(file_path):
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 
 # parsing functions
@@ -248,6 +247,8 @@ def scrape_program_details():
         conn.close()
         return
 
+    cache_file = load_json_cache(PROGRAM_DETAILS_CACHE_PATH)
+
     # Using sync_playwright as a standard flat context manager
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -260,13 +261,50 @@ def scrape_program_details():
             program_url = f"https://scoreboard.clippd.com/teams/{clippd_id}?season=2026"
             
             try:
-                page.goto(program_url, wait_until="domcontentloaded", timeout=15000)
-                page.wait_for_selector("main", timeout=5000)
-                
-                html_content = page.content()
-                soup = BeautifulSoup(html_content, "html.parser")
-                
-                coach = parse_head_coach(soup)
+                if clippd_id in cache_file:
+                    print(f"Loaded {name} ({clippd_id}) data from JSON cache. Bypassing Playwright...")
+                    cached_data = cache_file[clippd_id]
+                    coach = cached_data["head_coach"]
+                    
+                    # Convert dates from JSON string back to datetime.date objects for insertion
+                    events = []
+                    for e in cached_data["events"]:
+                        s_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
+                        e_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
+                        events.append((
+                            program_id, e["name"], e["position"], e["field_size"], e["score"],
+                            e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
+                            s_dt, e_dt
+                        ))
+                else:
+                    print(f"Getting fresh program data for {name} ({clippd_id})")
+                    page.goto(program_url, wait_until="domcontentloaded", timeout=15000)
+                    page.wait_for_selector("main", timeout=5000)
+                    
+                    html_content = page.content()
+                    soup = BeautifulSoup(html_content, "html.parser")
+                    
+                    coach = parse_head_coach(soup)
+
+                    events_tuples = parse_events(soup, program_id)
+
+                    cache_file[clippd_id] = {
+                        "head_coach": coach,
+                        "events": [
+                            {
+                                "name": e[1], "position": e[2], "field_size": e[3], "score": e[4],
+                                "event_sg": e[5], "total_points": e[6], "weighted_points": e[7], "total_rounds": e[8],
+                                "start_date": e[9].strftime("%Y-%m-%d") if e[9] else None,
+                                "end_date": e[10].strftime("%Y-%m-%d") if e[10] else None
+                            } for e in events_tuples
+                        ]
+                    }
+
+                    save_json_cache(PROGRAM_DETAILS_CACHE_PATH, cache_file)
+
+                    events = events_tuples
+
+                # insert coach into database
                 if coach:
                     try:
                         cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, program_id])
@@ -274,22 +312,23 @@ def scrape_program_details():
                     except Exception as e:
                         print(f"Error updating head coach {e}")
 
-                events = parse_events(soup, program_id)
-
                 # we delete and reload events to ensure up to date events for the programs
                 if events:
-                    cursor.execute("DELETE FROM program_events WHERE program_uuid = %s;", [program_id])
+                    try:
+                        cursor.execute("DELETE FROM program_events WHERE program_uuid = %s;", [program_id])
 
-                    events_insert_query = """
-                        INSERT INTO program_events (
-                            program_uuid, name, position, field_size, score, 
-                            event_sg, total_points, weighted_points, total_rounds, 
-                            start_date, end_date
-                        ) VALUES %s;
-                    """
+                        events_insert_query = """
+                            INSERT INTO program_events (
+                                program_uuid, name, position, field_size, score, 
+                                event_sg, total_points, weighted_points, total_rounds, 
+                                start_date, end_date
+                            ) VALUES %s;
+                        """
 
-                    execute_values(cursor, events_insert_query, events)
-                    print(f"Reloaded {len(events)} events for {name}.")
+                        execute_values(cursor, events_insert_query, events)
+                        print(f"Reloaded {len(events)} events for {name}.")
+                    except Exception as e:
+                        print(f"Error updating events for {name} ({clippd_id})")
 
                 conn.commit()
 
@@ -379,5 +418,5 @@ def scrape_player_details():
     conn.close()
 
 if __name__ == "__main__":
-    #scrape_program_details()
-    scrape_player_details()
+    scrape_program_details()
+    #scrape_player_details()
