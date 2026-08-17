@@ -56,9 +56,15 @@ def parse_date_str(date_str):
     comma_split = date_str.split(",")
     
     day_month_str = comma_split[0].lower().strip()
-    
-    start_date_str = day_month_str.split("-")[0].lower().strip()
-    end_date_str = day_month_str.split("-")[1].lower().strip()
+
+    # ensure a hyphen exists in the day month string before splitting
+    # events without a hyphen are one day
+    if "-" in day_month_str:
+        start_date_str = day_month_str.split("-")[0].lower().strip()
+        end_date_str = day_month_str.split("-")[1].lower().strip()
+    else:
+        start_date_str = day_month_str
+        end_date_str = day_month_str
     
     start_date_mm, start_date_dd = parse_mm_dd(start_date_str)
     end_date_mm, end_date_dd = parse_mm_dd(end_date_str)
