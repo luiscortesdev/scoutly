@@ -162,7 +162,7 @@ CREATE TABLE players (
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
-    graduation_year VARCHAR(10) NULL,
+    graduation_year VARCHAR(50) NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
