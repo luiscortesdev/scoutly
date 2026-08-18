@@ -220,6 +220,30 @@ def parse_events(soup, uuid):
 
     return events
 
+# requests.get function with retries
+def request_url_with_retry(url, headers, max_retries=5, backoff_factor=1.5):
+    for i in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                return response
+            elif response.status_code == 429:
+                # too many requests so we need to wait
+                sleep_time = (backoff_factor ** i) * 4
+                print(f"Rate limited (429) on {url}. Retrying in {sleep_time:.1f}s...")
+                time.sleep(sleep_time)
+            else:
+                print(f"Server returned status {response.status_code} for {url}")
+                return None
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            sleep_time = (backoff_factor ** i) * 2
+            print(f"Network timeout on {url}. Retry {i+1}/{max_retries} in {sleep_time:.1f}s...")
+            time.sleep(sleep_time)
+            
+    print(f"Failed to fetch {url} after {max_retries} retries.")
+    return None
+
 # worker process for one team or player
 def process_single_entry(entry, type_param, pool, cache, cache_path):
     # get entry database uuid, clippd id, name, and url
