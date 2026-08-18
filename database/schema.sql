@@ -162,10 +162,12 @@ CREATE TABLE players (
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
-    graduation_year VARCHAR(50) NULL,
+    graduation_year VARCHAR(50) NULL, -- graudation year requires scraping additional details which seems too computationally expensive. this field may be deleted soon.
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
+/*
+For now, we are not going to store any events for individual players
 CREATE TABLE player_events (
     id SERIAL PRIMARY KEY,
     player_uuid UUID REFERENCES players(id) ON DELETE CASCADE,
@@ -181,6 +183,7 @@ CREATE TABLE player_events (
     end_date DATE NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+*/
 
 CREATE TABLE saved_matches (
     id SERIAL PRIMARY KEY,
