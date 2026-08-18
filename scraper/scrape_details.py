@@ -7,7 +7,6 @@ import random
 import threading
 from datetime import datetime, date
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
