@@ -447,4 +447,4 @@ def scrape_details(type_param, scrape_events=False, max_threads=15):
 
 if __name__ == "__main__":
     scrape_details("Team", True)
-    scrape_details("Player")
+    # scrape_details("Player") Don't scrape players as it takes too long
