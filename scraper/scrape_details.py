@@ -4,6 +4,7 @@ import json
 import requests
 import time
 import random
+import threading
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -36,6 +37,10 @@ HEADERS = {
 PROGRAM_DETAILS_CACHE = {}
 PLAYER_DETAILS_CACHE = {}
 
+# prevent threads from writing to the same dictionary or file at the same time
+PROGRAM_CACHE_LOCK = threading.Lock()
+PLAYER_CACHE_LOCK = threading.Lock()
+
 def load_all_cache():
     global PROGRAM_DETAILS_CACHE, PLAYER_DETAILS_CACHE
     if os.path.exists(PROGRAM_DETAILS_CACHE_PATH):
@@ -50,7 +55,7 @@ def save_json_cache(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-# parsing functions
+# html parsing functions
 def parse_date_str(date_str):
     if not date_str or not "," in date_str:
         return None, None
@@ -342,25 +347,6 @@ def process_single_entry(entry, type_param, pool, cache, cache_path):
         # always return connection back to pool
         cursor.close()
         pool.putconn(conn)
-
-# playwright configuration
-def configure_page_route(page):
-    def handle_route(route, request):
-        url = request.url
-        resource_type = request.resource_type
-        
-        blocked_trackers = ["sentry", "google.analytics", "hotjar", "doubleclick", "quantserve", "intergient", "rapidedge", "quantcount"]
-        blocked_assets = ["image", "font", "media"]
-        
-        # match to our block lists
-        if any(tracker in url.lower() for tracker in blocked_trackers):
-            route.abort()
-        elif resource_type in blocked_assets:
-            route.abort()
-        else:
-            route.continue_()
-
-    page.route("**/*", handle_route)
 
 def scrape_details(type_param, max_threads=15):
     if not type_param in ("Team", "Player"):
