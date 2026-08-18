@@ -50,11 +50,6 @@ def load_all_cache():
             with open(PLAYER_DETAILS_CACHE_PATH) as f:
                 PLAYER_DETAILS_CACHE = json.load(f)
 
-# cache helper function
-def save_json_cache(file_path, data):
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-
 # html parsing functions
 def parse_date_str(date_str):
     if not date_str or not "," in date_str:
