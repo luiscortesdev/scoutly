@@ -240,7 +240,7 @@ def request_url_with_retry(url, headers, max_retries=5, backoff_factor=1.5):
     return None
 
 # worker process for one team or player
-def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
+def process_single_entry(entry, type_param, scrape_events, pool, cache, cache_path, lock):
     # get entry database uuid, clippd id, name, and url
     entry_id, clippd_id, name = entry
     entry_url = f"https://scoreboard.clippd.com/{type_param.lower()}s/{clippd_id}?season=2026"
@@ -257,21 +257,28 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
         events = []
 
         with lock:
-            if clippd_id in cache:
+            if clippd_id in cache:                
                 from_cache = True
                 cached_data = cache[clippd_id]
 
                 coach = cached_data.get("head_coach", None)
                 graduation_year = cached_data.get("graduation_year", None)
-
-                for e in cached_data["events"]:
-                    start_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
-                    end_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
-                    events.append((
-                        entry_id, e["name"], e["position"], e["field_size"], e["score"],
-                        e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
-                        start_dt, end_dt
-                    ))
+                
+                if (scrape_events and cached_data.get("events", [])):
+                    for e in cached_data.get("events", []):
+                        start_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
+                        end_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
+                        events.append((
+                            entry_id, e["name"], e["position"], e["field_size"], e["score"],
+                            e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
+                            start_dt, end_dt
+                        ))
+                elif (scrape_events and not cached_data.get("events", [])):
+                    print(f"Need to update events cache for {name} ({clippd_id})")
+                    from_cache = False
+                else:
+                    # if scrape events is false we don't need to do anything with events
+                    pass
 
         if not from_cache:
             # wait between requests to avoid spamming servers
@@ -286,7 +293,9 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
                 coach = li_data.get("Head Coach", None)
                 graduation_year = li_data.get("School Year", None)
 
-                events_tuples = parse_events(soup, entry_id)
+                events_tuples = []
+                if scrape_events:
+                    events_tuples = parse_events(soup, entry_id)
 
                 with lock:
                     cache[clippd_id] = {
@@ -301,9 +310,10 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
                             } for e in events_tuples
                         ]
                     }
-                # save to cache
-                with open(cache_path, "w", encoding="utf-8") as f:
-                    json.dump(cache, f, indent=2)
+                    
+                    # save to cache
+                    with open(cache_path, "w", encoding="utf-8") as f:
+                        json.dump(cache, f, indent=2)
 
                 events = events_tuples
             else:
@@ -326,7 +336,7 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
             except Exception as e:
                 print(f"Error updating player grad year {e}")
 
-        if events:
+        if events and scrape_events:
             try:
                 # dynamically create delete query for players and programs
                 uuid_string = "program_uuid" if type_param == "Team" else "player_uuid"
@@ -369,7 +379,7 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
         cursor.close()
         pool.putconn(conn)
 
-def scrape_details(type_param, max_threads=15):
+def scrape_details(type_param, scrape_events=False, max_threads=15):
     if not type_param in ("Team", "Player"):
         print(f"Please provide a valid of type of 'Team' or 'Player'! You provided: {type_param}")
         return None
@@ -422,14 +432,14 @@ def scrape_details(type_param, max_threads=15):
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # map worker function to each entry and the executor coordinates distribution to idle threads
         executor.map(
-            lambda entry: process_single_entry(entry, type_param, db_pool, cache, cache_path, lock),
+            lambda entry: process_single_entry(entry, type_param, scrape_events, db_pool, cache, cache_path, lock),
             entries
         )
         
-
     with lock:
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(cache, f, indent=2)
+    
     db_pool.closeall()
     
     elapsed_time = time.time() - start_time
@@ -437,5 +447,5 @@ def scrape_details(type_param, max_threads=15):
     print(f"Completed {type_param} detail crawls in {elapsed_time:.2f} seconds!")
 
 if __name__ == "__main__":
-    #scrape_details("Team")
+    scrape_details("Team", True)
     scrape_details("Player")
