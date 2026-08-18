@@ -282,9 +282,9 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
             # wait between requests to avoid spamming servers
             time.sleep(random.uniform(0.5, 1.5))
 
-            response = requests.get(entry_url, headers=HEADERS, timeout=10)
+            response = request_url_with_retry(entry_url, headers=HEADERS)
 
-            if response.status_code == 200:
+            if response and response.status_code == 200:
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 li_data = parse_li_data(soup)
@@ -293,18 +293,19 @@ def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
 
                 events_tuples = parse_events(soup, entry_id)
 
-                cache[clippd_id] = {
-                    "head_coach": coach,
-                    "graduation_year": graduation_year,
-                    "events": [
-                        {
-                            "name": e[1], "position": e[2], "field_size": e[3], "score": e[4],
-                            "event_sg": e[5], "total_points": e[6], "weighted_points": e[7], "total_rounds": e[8],
-                            "start_date": e[9].strftime("%Y-%m-%d") if e[9] else None,
-                            "end_date": e[10].strftime("%Y-%m-%d") if e[10] else None
-                        } for e in events_tuples
-                    ]
-                }
+                with lock:
+                    cache[clippd_id] = {
+                        "head_coach": coach,
+                        "graduation_year": graduation_year,
+                        "events": [
+                            {
+                                "name": e[1], "position": e[2], "field_size": e[3], "score": e[4],
+                                "event_sg": e[5], "total_points": e[6], "weighted_points": e[7], "total_rounds": e[8],
+                                "start_date": e[9].strftime("%Y-%m-%d") if e[9] else None,
+                                "end_date": e[10].strftime("%Y-%m-%d") if e[10] else None
+                            } for e in events_tuples
+                        ]
+                    }
                 # save to cache
                 with open(cache_path, "w", encoding="utf-8") as f:
                     json.dump(cache, f, indent=2)
@@ -418,6 +419,7 @@ def scrape_details(type_param, max_threads=15):
 
     cache = PROGRAM_DETAILS_CACHE if type_param == "Team" else PLAYER_DETAILS_CACHE
     cache_path = PROGRAM_DETAILS_CACHE_PATH if type_param == "Team" else PLAYER_DETAILS_CACHE_PATH
+    lock = PROGRAM_CACHE_LOCK if type_param == "Team" else PLAYER_CACHE_LOCK
     
     print(f"Starting multithreaded crawl using {max_threads} worker threads...")
     start_time = time.time()
@@ -425,12 +427,14 @@ def scrape_details(type_param, max_threads=15):
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # map worker function to each entry and the executor coordinates distribution to idle threads
         executor.map(
-            lambda entry: process_single_entry(entry, type_param, db_pool, cache, cache_path),
+            lambda entry: process_single_entry(entry, type_param, db_pool, cache, cache_path, lock),
             entries
         )
         
 
-    save_json_cache(cache_path, cache)
+    with lock:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache, f, indent=2)
     db_pool.closeall()
     
     elapsed_time = time.time() - start_time
