@@ -47,8 +47,8 @@ def load_all_cache():
         with open(PROGRAM_DETAILS_CACHE_PATH) as f:
             PROGRAM_DETAILS_CACHE = json.load(f)
     if os.path.exists(PLAYER_DETAILS_CACHE_PATH):
-            with open(PLAYER_DETAILS_CACHE_PATH) as f:
-                PLAYER_DETAILS_CACHE = json.load(f)
+        with open(PLAYER_DETAILS_CACHE_PATH) as f:
+            PLAYER_DETAILS_CACHE = json.load(f)
 
 # html parsing functions
 def parse_date_str(date_str):
