@@ -108,23 +108,19 @@ def parse_date_str(date_str):
         print(f"Error parsing start and end date for event")
         return None, None
 
-def parse_head_coach(soup):
-    coach_label = soup.find(string=re.compile(r"Head Coach", re.IGNORECASE))
+def parse_li_data(soup):
+    li_data = {}
+    data_sentry_lis = soup.find_all("li", {"data-sentry-component": "DefinitionListItem"})
     
-    if coach_label:
-        coach_name = coach_label.find_next()
-        if coach_name:
-            return coach_name.text.strip()
-        
-    return None
+    for li in data_sentry_lis:
+        li_spans = li.find_all("span")
+        if len(li_spans) >= 2:
+            # clean up colons in labels
+            label = li_spans[0].get_text(strip=True).replace(":", "")
+            value = li_spans[1].get_text(strip=True)
+            li_data[label] = value
 
-def parse_graduation_year(soup):
-    school_year_label = soup.find(string=re.compile(r"School Year", re.IGNORECASE))
-
-    if school_year_label:
-        graduation_year_label = school_year_label.find_next()
-        if graduation_year_label:
-            return graduation_year_label.text.strip()
+    return li_data
 
 def parse_events(soup, uuid):
     events = []
