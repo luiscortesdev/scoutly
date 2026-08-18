@@ -45,6 +45,10 @@ def load_all_cache():
             with open(PLAYER_DETAILS_CACHE_PATH) as f:
                 PLAYER_DETAILS_CACHE = json.load(f)
 
+# cache helper function
+def save_json_cache(file_path, data):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
 
 # parsing functions
 def parse_date_str(date_str):
@@ -358,23 +362,24 @@ def configure_page_route(page):
 
     page.route("**/*", handle_route)
 
-def scrape_details(type_param):
+def scrape_details(type_param, max_threads=15):
     if not type_param in ("Team", "Player"):
-        print(f"Please provide a valid of type of 'Team' or 'Player'!")
+        print(f"Please provide a valid of type of 'Team' or 'Player'! You provided: {type_param}")
         return None
+    
+    load_all_cache()
 
-    print("Connecting to database...")
-    conn = psycopg2.connect(
+    print(f"Connecting to database to fetch all {type_param}s...")
+    temp_conn = psycopg2.connect(
         host=DB_BIND_ADDRESS,
         port=DB_PORT,
         database=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD
     )
-    cursor = conn.cursor()
+    cursor = temp_conn.cursor()
 
     main_table_name = "programs" if type_param == "Team" else "players"
-    events_table_name = "program_events" if type_param == "Team" else "player_events"
 
     fetch_query = sql.SQL("SELECT id, clippd_id, name FROM {table};").format(
         table=sql.Identifier(main_table_name)
@@ -383,130 +388,44 @@ def scrape_details(type_param):
     cursor.execute(fetch_query)
     entries = cursor.fetchall()
     
+    cursor.close()
+    temp_conn.close()
+    
     print(f"Found {len(entries)} {type_param}s to process.")
     if not entries:
-        cursor.close()
-        conn.close()
         return
+    
+    db_pool = ThreadedConnectionPool(
+        minconn=1,
+        maxconn=max_threads + 2,
+        host=DB_BIND_ADDRESS,
+        port=DB_PORT,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
 
-    cache_file = load_json_cache(PROGRAM_DETAILS_CACHE_PATH) if type_param == "Team" else load_json_cache(PLAYER_DETAILS_CACHE_PATH)
-
-    # Using sync_playwright as a standard flat context manager
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
+    cache = PROGRAM_DETAILS_CACHE if type_param == "Team" else PLAYER_DETAILS_CACHE
+    cache_path = PROGRAM_DETAILS_CACHE_PATH if type_param == "Team" else PLAYER_DETAILS_CACHE_PATH
+    
+    print(f"Starting multithreaded crawl using {max_threads} worker threads...")
+    start_time = time.time()
+    
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        # map worker function to each entry and the executor coordinates distribution to idle threads
+        executor.map(
+            lambda entry: process_single_entry(entry, type_param, db_pool, cache, cache_path),
+            entries
+        )
         
-        # Create a single context and page OUTSIDE the loop to prevent process leaks
-        page = browser.new_page(user_agent=USER_AGENT)
-        configure_page_route(page)
-        
-        for entry_id, clippd_id, name in entries:
-            entry_url = f"https://scoreboard.clippd.com/{type_param.lower()}s/{clippd_id}?season=2026"
-            
-            try:
-                if clippd_id in cache_file:
-                    print(f"Loaded {name} ({clippd_id}) data from JSON cache. Bypassing Playwright...")
-                    cached_data = cache_file[clippd_id]
-                    coach = cached_data.get("head_coach", None)
-                    graduation_year = cached_data.get("graduation_year", None)
-                    
-                    # Convert dates from JSON string back to datetime.date objects for insertion
-                    events = []
-                    for e in cached_data["events"]:
-                        s_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
-                        e_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
-                        events.append((
-                            entry_id, e["name"], e["position"], e["field_size"], e["score"],
-                            e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
-                            s_dt, e_dt
-                        ))
-                else:
-                    print(f"Getting fresh {type_param.lower()} data for {name} ({clippd_id})")
-                    page.goto(entry_url, wait_until="domcontentloaded", timeout=15000)
-                    page.wait_for_selector("main", timeout=5000)
-                    
-                    html_content = page.content()
-                    soup = BeautifulSoup(html_content, "html.parser")
 
-                    coach = parse_head_coach(soup)
-                    graduation_year = parse_graduation_year(soup)
-
-                    events_tuples = parse_events(soup, entry_id)
-
-                    cache_file[clippd_id] = {
-                        "head_coach": coach,
-                        "events": [
-                            {
-                                "name": e[1], "position": e[2], "field_size": e[3], "score": e[4],
-                                "event_sg": e[5], "total_points": e[6], "weighted_points": e[7], "total_rounds": e[8],
-                                "start_date": e[9].strftime("%Y-%m-%d") if e[9] else None,
-                                "end_date": e[10].strftime("%Y-%m-%d") if e[10] else None
-                            } for e in events_tuples
-                        ]
-                    }
-
-                    cache_path = PROGRAM_DETAILS_CACHE_PATH if type_param == "Team" else PLAYER_DETAILS_CACHE_PATH
-                    save_json_cache(cache_path, cache_file)
-
-                    events = events_tuples
-
-                # insert coach and graduation year into database
-                if coach:
-                    try:
-                        cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, entry_id])
-                        print(f"Updated {name} head coach to {coach}")
-                    except Exception as e:
-                        print(f"Error updating head coach {e}")
-
-                if graduation_year:
-                    try:
-                        cursor.execute("UPDATE players SET graduation_year = %s WHERE id = %s;", [graduation_year, entry_id])
-                        print(f"Updated {name} grad year to {graduation_year}")
-                    except Exception as e:
-                        print(f"Error updating player grad year {e}")
-
-                # we delete and reload events to ensure up to date events for the programs
-                if events:
-                    try:
-                        # dynamically create delete query for players and programs
-                        uuid_string = "program_uuid" if type_param == "Team" else "player_uuid"
-
-                        events_delete_query = sql.SQL("DELETE FROM {table} WHERE {uuid_string} = {id};").format(
-                            table=sql.Identifier(events_table_name),
-                            uuid_string=sql.Identifier(uuid_string),
-                            id=sql.Literal(entry_id)
-                        )
-
-                        cursor.execute(events_delete_query)
-
-                        # dynamically create insert queries
-                        events_insert_query_template = sql.SQL("""
-                            INSERT INTO {table} (
-                                {uuid_string}, name, position, field_size, score, 
-                                event_sg, total_points, weighted_points, total_rounds, 
-                                start_date, end_date
-                            ) VALUES %s;
-                        """)
-
-                        # format query with event table value
-                        events_insert_query = events_insert_query_template.format(table=sql.Identifier(events_table_name), uuid_string=sql.Identifier(uuid_string))
-                        
-                        execute_values(cursor, events_insert_query.as_string(cursor), events)
-
-                    except Exception as e:
-                        print(f"Error updating events for {name} ({clippd_id}): {e}")
-
-                conn.commit()
-
-            except Exception as e:
-                (f"Error fetching id {clippd_id}: {e}")
-                conn.rollback()
-        
-        page.close()
-        browser.close()
-
-    cursor.close()
-    conn.close()
+    save_json_cache(cache_path, cache)
+    db_pool.closeall()
+    
+    elapsed_time = time.time() - start_time
+    
+    print(f"Completed {type_param} detail crawls in {elapsed_time:.2f} seconds!")
 
 if __name__ == "__main__":
-    scrape_details("Team")
+    #scrape_details("Team")
     scrape_details("Player")
