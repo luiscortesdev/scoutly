@@ -245,7 +245,7 @@ def request_url_with_retry(url, headers, max_retries=5, backoff_factor=1.5):
     return None
 
 # worker process for one team or player
-def process_single_entry(entry, type_param, pool, cache, cache_path):
+def process_single_entry(entry, type_param, pool, cache, cache_path, lock):
     # get entry database uuid, clippd id, name, and url
     entry_id, clippd_id, name = entry
     entry_url = f"https://scoreboard.clippd.com/{type_param.lower()}s/{clippd_id}?season=2026"
@@ -261,23 +261,24 @@ def process_single_entry(entry, type_param, pool, cache, cache_path):
         graduation_year = None
         events = []
 
-        if clippd_id in cache:
-            from_cache = True
-            cached_data = cache[clippd_id]
+        with lock:
+            if clippd_id in cache:
+                from_cache = True
+                cached_data = cache[clippd_id]
 
-            coach = cached_data.get("head_coach", None)
-            graduation_year = cached_data.get("graduation_year", None)
+                coach = cached_data.get("head_coach", None)
+                graduation_year = cached_data.get("graduation_year", None)
 
-            for e in cached_data["events"]:
-                start_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
-                end_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
-                events.append((
-                    entry_id, e["name"], e["position"], e["field_size"], e["score"],
-                    e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
-                    start_dt, end_dt
-                ))
+                for e in cached_data["events"]:
+                    start_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
+                    end_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
+                    events.append((
+                        entry_id, e["name"], e["position"], e["field_size"], e["score"],
+                        e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
+                        start_dt, end_dt
+                    ))
 
-        else:
+        if not from_cache:
             # wait between requests to avoid spamming servers
             time.sleep(random.uniform(0.5, 1.5))
 
