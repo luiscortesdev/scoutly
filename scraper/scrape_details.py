@@ -1,6 +1,9 @@
 import os
 import re
 import json
+import requests
+import time
+import random
 from datetime import datetime, date
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -25,8 +28,9 @@ PLAYER_DETAILS_CACHE_PATH = os.path.join(CACHE_DIR, "clippd_player_details.json"
 
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+}
 
 # load entire cache into memory at once to allow for multiple threads to use it
 PROGRAM_DETAILS_CACHE = {}
@@ -206,7 +210,134 @@ def parse_events(soup, uuid):
             print(f"Error parsing event row: {e}")
 
     return events
+
+# worker process for one team or player
+def process_single_entry(entry, type_param, pool, cache, cache_path):
+    # get entry database uuid, clippd id, name, and url
+    entry_id, clippd_id, name = entry
+    entry_url = f"https://scoreboard.clippd.com/{type_param.lower()}s/{clippd_id}?season=2026"
+
+    conn = pool.getconn()
+    cursor = conn.cursor()
+
+    events_table_name = "program_events" if type_param == "Team" else "player_events"
+
+    try:
+        from_cache = False
+        coach = None
+        graduation_year = None
+        events = []
+
+        if clippd_id in cache:
+            from_cache = True
+            cached_data = cache[clippd_id]
+
+            coach = cached_data.get("head_coach", None)
+            graduation_year = cached_data.get("graduation_year", None)
+
+            for e in cached_data["events"]:
+                start_dt = datetime.strptime(e["start_date"], "%Y-%m-%d").date() if e["start_date"] else None
+                end_dt = datetime.strptime(e["end_date"], "%Y-%m-%d").date() if e["end_date"] else None
+                events.append((
+                    entry_id, e["name"], e["position"], e["field_size"], e["score"],
+                    e["event_sg"], e["total_points"], e["weighted_points"], e["total_rounds"],
+                    start_dt, end_dt
+                ))
+
+        else:
+            # wait between requests to avoid spamming servers
+            time.sleep(random.uniform(0.5, 1.5))
+
+            response = requests.get(entry_url, headers=HEADERS, timeout=10)
+
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                li_data = parse_li_data(soup)
+                coach = li_data.get("Head Coach", None)
+                graduation_year = li_data.get("School Year", None)
+
+                events_tuples = parse_events(soup, entry_id)
+
+                cache[clippd_id] = {
+                    "head_coach": coach,
+                    "graduation_year": graduation_year,
+                    "events": [
+                        {
+                            "name": e[1], "position": e[2], "field_size": e[3], "score": e[4],
+                            "event_sg": e[5], "total_points": e[6], "weighted_points": e[7], "total_rounds": e[8],
+                            "start_date": e[9].strftime("%Y-%m-%d") if e[9] else None,
+                            "end_date": e[10].strftime("%Y-%m-%d") if e[10] else None
+                        } for e in events_tuples
+                    ]
+                }
+                # save to cache
+                with open(cache_path, "w", encoding="utf-8") as f:
+                    json.dump(cache, f, indent=2)
+
+                events = events_tuples
+            else:
+                print(f"Server returned status {response.status_code} for {name} ({clippd_id})")
+                pool.putconn(conn)
+                return
+
+        # insert coach and graduation year into database
+        if coach:
+            try:
+                cursor.execute("UPDATE programs SET head_coach = %s WHERE id = %s;", [coach, entry_id])
+                print(f"Updated {name} head coach to {coach}")
+            except Exception as e:
+                print(f"Error updating head coach {e}")
+        
+        if graduation_year:
+            try:
+                cursor.execute("UPDATE players SET graduation_year = %s WHERE id = %s;", [graduation_year, entry_id])
+                print(f"Updated {name} grad year to {graduation_year}")
+            except Exception as e:
+                print(f"Error updating player grad year {e}")
+
+        if events:
+            try:
+                # dynamically create delete query for players and programs
+                uuid_string = "program_uuid" if type_param == "Team" else "player_uuid"
             
+                events_delete_query = sql.SQL("DELETE FROM {table} WHERE {uuid_string} = {id};").format(
+                    table=sql.Identifier(events_table_name),
+                    uuid_string=sql.Identifier(uuid_string),
+                    id=sql.Literal(entry_id)
+                )
+            
+                cursor.execute(events_delete_query)
+            
+                # dynamically create insert queries
+                events_insert_query_template = sql.SQL("""
+                    INSERT INTO {table} (
+                        {uuid_string}, name, position, field_size, score, 
+                        event_sg, total_points, weighted_points, total_rounds, 
+                        start_date, end_date
+                    ) VALUES %s;
+                """)
+            
+                # format query with event table value
+                events_insert_query = events_insert_query_template.format(table=sql.Identifier(events_table_name), uuid_string=sql.Identifier(uuid_string))
+                                    
+                execute_values(cursor, events_insert_query.as_string(cursor), events)
+            
+            except Exception as e:
+                print(f"Error updating events for {name} ({clippd_id}): {e}")
+                
+        conn.commit()
+        source_label = "cache" if from_cache else "server"
+                        
+        print(f"Processed {name} ({clippd_id}) using {source_label} successfully.")
+
+    except Exception as e:
+        print(f"Error processing {name} ({clippd_id}): {e}")
+        conn.rollback()
+    finally:
+        # always return connection back to pool
+        cursor.close()
+        pool.putconn(conn)
 
 # playwright configuration
 def configure_page_route(page):
