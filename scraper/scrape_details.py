@@ -7,6 +7,8 @@ from playwright.sync_api import sync_playwright
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extras import execute_values
+from psycopg2.pool import ThreadedConnectionPool
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -25,17 +27,19 @@ os.makedirs(CACHE_DIR, exist_ok=True)
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-# helper cache functions
-def load_json_cache(file_path):
-    if os.path.exists(file_path):
-        with open(file_path) as f:
-            return json.load(f)
 
-    return {}
+# load entire cache into memory at once to allow for multiple threads to use it
+PROGRAM_DETAILS_CACHE = {}
+PLAYER_DETAILS_CACHE = {}
 
-def save_json_cache(file_path, data):
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
+def load_all_cache():
+    global PROGRAM_DETAILS_CACHE, PLAYER_DETAILS_CACHE
+    if os.path.exists(PROGRAM_DETAILS_CACHE_PATH):
+        with open(PROGRAM_DETAILS_CACHE_PATH) as f:
+            PROGRAM_DETAILS_CACHE = json.load(f)
+    if os.path.exists(PLAYER_DETAILS_CACHE_PATH):
+            with open(PLAYER_DETAILS_CACHE_PATH) as f:
+                PLAYER_DETAILS_CACHE = json.load(f)
 
 
 # parsing functions
