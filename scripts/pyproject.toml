@@ -13,3 +13,6 @@ dependencies = [
 
 [project.scripts]
 seed-colleges = "scripts.seed_colleges:main"
+
+[tool.uv]
+package = true

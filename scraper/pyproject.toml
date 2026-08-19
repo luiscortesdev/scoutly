@@ -12,5 +12,8 @@ dependencies = [
 
 # This registers terminal commands inside the uv environment
 [project.scripts]
-scrape-rankings = "scraper.scrape_rankings:main"
-scrape-details = "scraper.scrape_details:main"
+scrape-rankings = "scrape_rankings:main"
+scrape-details = "scrape_details:main"
+
+[tool.uv]
+package = true
