@@ -282,7 +282,7 @@ source = { virtual = "." }
 [[package]]
 name = "scraper"
 version = "0.1.0"
-source = { virtual = "scraper" }
+source = { editable = "scraper" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "psycopg2-binary" },
@@ -301,7 +301,7 @@ requires-dist = [
 [[package]]
 name = "scripts"
 version = "0.1.0"
-source = { virtual = "scripts" }
+source = { editable = "scripts" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "pandas" },
