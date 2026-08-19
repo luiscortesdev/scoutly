@@ -341,17 +341,17 @@ def seed_database(records):
         print(f"Database connection error: {e}")
         sys.exit(1)
         
-
-if __name__ == "__main__":
-    data_url = get_download_url()
-
-    download_needed = should_download(data_url, LOCAL_CSV_PATH)
     
+def main():
+    data_url = get_download_url()
+    
+    download_needed = should_download(data_url, LOCAL_CSV_PATH)
+        
     if download_needed:
         try:
             # Download zip file
             download_data(data_url, TEMP_ZIP_PATH)
-            
+                
             # extract csv
             extract_csv_from_zip(TEMP_ZIP_PATH, LOCAL_CSV_PATH)
         finally:
@@ -359,11 +359,13 @@ if __name__ == "__main__":
             if os.path.exists(TEMP_ZIP_PATH):
                 print("Cleaning up temporary zip file...")
                 os.remove(TEMP_ZIP_PATH)
-                
+                    
     # Seed using csv file no matter if we needed to download or not
     if os.path.exists(LOCAL_CSV_PATH):
         cleaned_records = process_data(LOCAL_CSV_PATH)
         seed_database(cleaned_records)
     else:
         print("Critical Error: Local CSV file is missing. Seed aborted.")
-    
+
+if __name__ == "__main__":
+    main()
