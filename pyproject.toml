@@ -1,0 +1,12 @@
+[project]
+name = "scoutly"
+version = "0.1.0"
+description = "Scoutly College Golf Recruitment and Matching Platform"
+requires-python = ">=3.14"
+dependencies = []
+
+[tool.uv]
+package = false # root is not an installable package
+
+[tool.uv.workspace]
+members = ["backend", "scraper", "scripts"] # register sub-projects

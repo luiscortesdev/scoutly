@@ -1,0 +1,16 @@
+[project]
+name = "scraper"
+version = "0.1.0"
+description = "Clippd Ranking and Details Crawler"
+requires-python = ">=3.14"
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "psycopg2-binary>=2.9.9",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.1"
+]
+
+# This registers terminal commands inside the uv environment
+[project.scripts]
+scrape-rankings = "scraper.scrape_rankings:main"
+scrape-details = "scraper.scrape_details:main"

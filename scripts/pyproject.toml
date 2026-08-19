@@ -1,0 +1,15 @@
+[project]
+name = "scripts"
+version = "0.1.0"
+description = "Scoutly Database Seeding and Utility Tasks"
+requires-python = ">=3.14"
+dependencies = [
+    "pandas>=2.2.1",
+    "psycopg2-binary>=2.9.9",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.3",
+    "python-dotenv>=1.2.3",
+]
+
+[project.scripts]
+seed-colleges = "scripts.seed_colleges:main"
