@@ -14,6 +14,3 @@ dependencies = [
 [project.scripts]
 scrape-rankings = "scraper.scrape_rankings:main"
 scrape-details = "scraper.scrape_details:main"
-
-[tool.uv]
-package = true

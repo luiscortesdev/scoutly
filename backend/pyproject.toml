@@ -11,5 +11,5 @@ dependencies = [
 [project.scripts]
 backend = "src:main.app"
 
-[tool.uv]
-package = true
+[tool.fastapi]
+entrypoint = "main:app"
