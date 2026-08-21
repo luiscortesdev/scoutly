@@ -9,4 +9,8 @@ dependencies = []
 package = false # root is not an installable package
 
 [tool.uv.workspace]
-members = ["backend", "scraper", "scripts"] # register sub-projects
+members = [
+    "backend",
+    "scraper",
+    "scripts",
+] # register sub-projects
