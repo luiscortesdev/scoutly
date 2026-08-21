@@ -48,7 +48,7 @@ wheels = [
 [[package]]
 name = "backend"
 version = "0.1.0"
-source = { editable = "backend" }
+source = { virtual = "backend" }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
 ]
@@ -870,7 +870,7 @@ source = { virtual = "." }
 [[package]]
 name = "scraper"
 version = "0.1.0"
-source = { editable = "scraper" }
+source = { virtual = "scraper" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "psycopg2-binary" },
@@ -889,7 +889,7 @@ requires-dist = [
 [[package]]
 name = "scripts"
 version = "0.1.0"
-source = { editable = "scripts" }
+source = { virtual = "scripts" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "pandas" },
