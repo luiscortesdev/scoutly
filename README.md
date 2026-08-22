@@ -10,33 +10,27 @@ Get-Content database/schema.sql | docker exec -i scoutly_postgres_db psql -U sco
 ```
 
 # Scripts
-This project uses [uv](https://docs.astral.sh/uv/) as its package manager. The following instructions assume that you have uv installed on your machine.
+This project uses [uv](https://docs.astral.sh/uv/) as its package manager. The following instructions assume that you have uv installed on your machine. Additionally, ensure that your Postgres database is active.
 
-Initialize a virtual environment and install dependencies
+First, initialize a virtual environment and install dependencies using uv.
 ```bash
 uv sync
 ```
 
-Install required python packages
-```bash
-pip install --upgrade pip
-pip install -r scripts/requirements.txt
-```
-
-Seed College Scorecard Data
+Next, we can seed the United States Department of Education (College Scorecard)[https://collegescorecard.ed.gov/] data in our database.
 ```bash 
-python scripts/seed_colleges.py
+uv run seed-colleges
 ```
 
-Seed Clippd Rankings Data
+We then seed rankings data from the (Clippd Scoreboard)[https://scoreboard.clippd.com/] API.
 ```bash
-python scraper/scrape_rankings.py
+uv run scrape-rankings
 ```
 NOTE: it is completely normal to see errors for player ids being unable to resolve. These players belong to teams whose college golf programs are no longer ranked/no longer exist. However, Clippd has not removed them from their player rankings.
 
-Seed Clippd Event and Miscellaneous Data
+Finally, we can seed Clippd event data and other miscellaneous details.
 ```bash
-python scraper/scrape_details.py
+uv run scrape-rankings
 ```
 
 # Algorithms
