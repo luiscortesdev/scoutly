@@ -17,12 +17,12 @@ First, initialize a virtual environment and install dependencies using uv.
 uv sync
 ```
 
-Next, we can seed the United States Department of Education (College Scorecard)[https://collegescorecard.ed.gov/] data in our database.
+Next, we can seed the United States Department of Education [College Scorecard](https://collegescorecard.ed.gov/) data in our database.
 ```bash 
 uv run seed-colleges
 ```
 
-We then seed rankings data from the (Clippd Scoreboard)[https://scoreboard.clippd.com/] API.
+We then seed rankings data from the [Clippd Scoreboard](https://scoreboard.clippd.com/) API.
 ```bash
 uv run scrape-rankings
 ```
