@@ -10,10 +10,11 @@ Get-Content database/schema.sql | docker exec -i scoutly_postgres_db psql -U sco
 ```
 
 # Scripts
-Create a virtual environment using python
+This project uses [uv](https://docs.astral.sh/uv/) as its package manager. The following instructions assume that you have uv installed on your machine.
+
+Initialize a virtual environment and install dependencies
 ```bash
-python -m venv .venv
-.venv\Scripts\Activate.ps1
+uv sync
 ```
 
 Install required python packages
