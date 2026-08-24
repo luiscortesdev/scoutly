@@ -5,6 +5,7 @@ description = "Backend API and Algorithms"
 requires-python = ">=3.14"
 dependencies = [
     "fastapi[standard]>=0.141.1",
+    "sqlalchemy>=2.0.52",
 ]
 
 [tool.fastapi]
