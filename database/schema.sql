@@ -162,7 +162,7 @@ CREATE TABLE players (
     total_rounds INT NULL,
     win_loss_tie VARCHAR(255) NULL,
     wins INT NULL,
-    graduation_year VARCHAR(50) NULL, -- graudation year requires scraping additional details which seems too computationally expensive. this field may be deleted soon.
+    -- graduation_year VARCHAR(50) NULL, -- graudation year requires scraping additional details is too computationally expensive. this field may be deleted soon.
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
