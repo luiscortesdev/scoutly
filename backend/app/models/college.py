@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from datetime import datetime
 from sqlalchemy import String, Integer, Numeric, Boolean, DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.program import Program 
-
-class Base(DeclarativeBase):
-    pass
 
 class College(Base):
     __tablename__ = "colleges"
@@ -19,7 +18,7 @@ class College(Base):
     opeid6: Mapped[str | None] = mapped_column(String(50))
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     city: Mapped[str] = mapped_column(String(100), nullable=False)
-    state: Mapped[str] = mapped_column(String(10), nullable=False)  # Maps to CHAR(10)
+    state: Mapped[str] = mapped_column(String(10), nullable=False)
     zip: Mapped[str] = mapped_column(String(20), nullable=False)
     address: Mapped[str | None] = mapped_column(String(500))
     
@@ -61,5 +60,6 @@ class College(Base):
         server_default=func.now(), 
         nullable=False
     )
-
+    
+    # points to college attribute on program model
     programs: Mapped[list[Program]] = relationship("Program", back_populates="college")
