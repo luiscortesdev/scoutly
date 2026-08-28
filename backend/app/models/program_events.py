@@ -16,7 +16,6 @@ class ProgramEvents(Base):
     __tablename__ = "program_events"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    
     program_uuid: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey("programs.id", ondelete="CASCADE"),
