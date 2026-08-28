@@ -1,5 +1,5 @@
 # Scoutly
-A free to use and simple way to find the perfect college golf program for you!
+An AI-powered college golf recruiting counselor.
 
 # Database
 Spin up the database using `docker compose up -d`
