@@ -13,7 +13,7 @@ from app.models.enums import GenderType, DivisionType
 if TYPE_CHECKING:
     from app.models.college import College
     from app.models.player import Player
-    from app.models.program_events import ProgramEvent
+    from backend.app.models.program_event import ProgramEvent
 
 class Program(Base):
     __tablename__ = "programs"

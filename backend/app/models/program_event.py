@@ -12,7 +12,7 @@ from app.models.base import Base
 if TYPE_CHECKING:
     from app.models.program import Program
 
-class ProgramEvents(Base):
+class ProgramEvent(Base):
     __tablename__ = "program_events"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
