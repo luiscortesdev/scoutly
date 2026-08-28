@@ -13,6 +13,7 @@ from app.models.enums import GenderType, DivisionType
 if TYPE_CHECKING:
     from app.models.college import College
     from app.models.player import Player
+    from app.models.program_events import ProgramEvent
 
 class Program(Base):
     __tablename__ = "programs"
@@ -64,3 +65,6 @@ class Program(Base):
     
     # points to "program" attribute in player model
     players: Mapped[list[Player]] = relationship("Player", back_populates="program")
+    
+    # points to "program" attribute in ProgramEvent model
+    events: Mapped[list[ProgramEvent]] = relationship("ProgramEvent", back_populates="program")
