@@ -6,7 +6,7 @@ CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_fo
 CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
 CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national');
 CREATE TYPE recruiting_tier_type AS ENUM ('reach', 'target', 'safety', 'undecided');
-CREATE TYPE academic_rigor_type as ENUM ('low rigor', 'medium rigor', 'high rigor');
+CREATE TYPE academic_rigor_type as ENUM ('low_rigor', 'medium_rigor', 'high_rigor');
 
 -- Tables
 CREATE TABLE users (
