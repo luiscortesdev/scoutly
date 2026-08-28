@@ -46,7 +46,7 @@ CREATE TABLE user_search_preferences (
     academic_rigor academic_rigor_type NOT NULL,
     min_act INT NOT NULL,
     min_sat INT NOT NULL,
-    user_test_score_tolerance INT NOT NULL, -- how strict the user is about minimum test scores
+    user_test_score_tolerance INT NOT NULL, -- might make enum how strict the user is about minimum test scores
     max_distance INT NOT NULL,
     -- based on college scorecard numbering
     preferred_regions INT[] NOT NULL,
