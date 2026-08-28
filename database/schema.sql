@@ -6,6 +6,7 @@ CREATE TYPE school_type_enum AS ENUM ('public', 'private_nonprofit', 'private_fo
 CREATE TYPE climate_type AS ENUM ('warm', 'moderate', 'cold');
 CREATE TYPE event_level_type AS ENUM ('local', 'state', 'regional', 'national');
 CREATE TYPE recruiting_tier_type AS ENUM ('reach', 'target', 'safety', 'undecided');
+CREATE TYPE academic_rigor_type as ENUM ('low rigor', 'medium rigor', 'high rigor');
 
 -- Tables
 CREATE TABLE users (
@@ -42,7 +43,7 @@ CREATE TABLE user_search_preferences (
     school_type school_type_enum NOT NULL,
     climate climate_type NOT NULL,
     program_rank INT NOT NULL, -- minimum program rank
-    academic_rigor TEXT NOT NULL,
+    academic_rigor academic_rigor_type NOT NULL,
     min_act INT NOT NULL,
     min_sat INT NOT NULL,
     user_test_score_tolerance INT NOT NULL, -- how strict the user is about minimum test scores
