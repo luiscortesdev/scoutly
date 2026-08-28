@@ -40,3 +40,8 @@ class RecruitingTierType(StrEnum):
     target = "target"
     safety = "safety"
     undecided = "undecided"
+    
+class AcademicRigorType(StrEnum):
+    low_rigor = "low_rigor"
+    medium_rigor = "medium_rigor"
+    high_rigor = "high_rigor"
