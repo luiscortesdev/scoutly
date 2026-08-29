@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
-class CollegesRead(BaseModel):
+class CollegeRead(BaseModel):
     unit_id: int
     opeid: str | None = None
     opeid6: str | None = None
