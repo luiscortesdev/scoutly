@@ -3,6 +3,10 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from app.models.enums import GenderType, DivisionType
 
+from app.schemas.college import CollegeRead
+from app.schemas.program_event import ProgramEventRead
+from app.schemas.player import PlayerRead
+
 # our frontend will only read programs
 class ProgramRead(BaseModel):
     id: uuid.UUID
@@ -26,3 +30,8 @@ class ProgramRead(BaseModel):
     
     # allow pydantic to read from orm models
     model_config = ConfigDict(from_attributes=True)
+    
+class ProgramReadDetailed(ProgramRead):
+    college: CollegeRead
+    events: list[ProgramEventRead] = []
+    players: list[PlayerRead] = []
