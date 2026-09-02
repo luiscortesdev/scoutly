@@ -1,6 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
+from app.schemas.program import ProgramRead
+
 class CollegeRead(BaseModel):
     unit_id: int
     opeid: str | None = None
@@ -45,5 +47,5 @@ class CollegeRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
     
-class CollegeReadWithPrograms(CollegeRead):
-    pass
+class CollegeReadWithProgram(CollegeRead):
+    programs: list[ProgramRead] = []
