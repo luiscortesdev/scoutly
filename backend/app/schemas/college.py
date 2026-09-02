@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
-from app.schemas.program import ProgramRead
+if TYPE_CHECKING:
+    from app.schemas.program import ProgramRead
 
 class CollegeRead(BaseModel):
     unit_id: int
@@ -48,4 +50,8 @@ class CollegeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
 class CollegeReadWithProgram(CollegeRead):
-    programs: list[ProgramRead] = []
+    programs: "list[ProgramRead]" = []
+    
+# fix circular imports
+from app.schemas.program import ProgramRead
+CollegeReadWithProgram.model_rebuild()
