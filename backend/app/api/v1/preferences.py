@@ -22,9 +22,8 @@ async def create_user_preference(
     )
     
     db.add(db_preference)
-    db.commit()
+    await db.commit()
     
-    db.refresh(db_preference)
+    await db.refresh(db_preference)
     
     return db_preference
-
