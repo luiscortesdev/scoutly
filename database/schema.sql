@@ -38,6 +38,7 @@ CREATE TABLE users (
 CREATE TABLE user_search_preferences (
     id SERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(500) NOT NULL,
     divisions division_type[] NOT NULL,
     user_role_desire user_role_type NOT NULL, -- What role the player wants on the team
     school_type school_type_enum NOT NULL,
