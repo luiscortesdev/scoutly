@@ -9,6 +9,7 @@ from app.models.enums import (
 )
 
 class UserSearchPreferenceBase(BaseModel):
+    title: str
     divisions: list[DivisionType]
     user_role_desire: UserRoleType
     school_type: SchoolTypeEnum
