@@ -32,3 +32,20 @@ class UserSearchPreferenceRead(UserSearchPreferenceBase):
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
+
+# validate incoming patch requests. fields can be None
+class UserSearchPreferenceUpdate(BaseModel):
+    title: str | None = None
+    divisions: list[DivisionType] | None = None
+    user_role_desire: UserRoleType | None = None
+    school_type: SchoolTypeEnum | None = None
+    climate: ClimateType | None = None
+    program_rank: int | None = None
+    academic_rigor: AcademicRigorType | None = None
+    min_act: int | None = None
+    min_sat: int | None = None
+    user_test_score_tolerance: int | None = None
+    max_distance: int | None = None
+    preferred_regions: list[int] | None = None
+    school_size: list[int] | None = None
+    school_setting: list[int] | None = None
