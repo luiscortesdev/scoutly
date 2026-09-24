@@ -10,6 +10,14 @@ from app.schemas.program import ProgramReadDetailed
 
 router = APIRouter()
 
+@router.get("")
+async def get_programs(
+    db: AsyncSession = Depends(get_db)
+):
+    return {
+        "message": "Hello"
+    }
+
 @router.get("/{program_id}", response_model=ProgramReadDetailed)
 async def get_program_details(
     program_id: uuid.UUID,
