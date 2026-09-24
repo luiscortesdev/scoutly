@@ -6,7 +6,7 @@ import uuid
 
 from app.api.deps import get_db
 from app.models.user_preference import UserSearchPreference
-from app.schemas.user_preference import UserSearchPreferenceCreate, UserSearchPreferenceRead
+from app.schemas.user_preference import UserSearchPreferenceCreate, UserSearchPreferenceRead, UserSearchPreferenceUpdate
 
 router = APIRouter()
 
@@ -37,6 +37,35 @@ async def create_user_preference(
     db.add(db_preference)
     await db.commit()
     
+    await db.refresh(db_preference)
+    
+    return db_preference
+
+
+@router.patch("/{preference_id}", response_model=UserSearchPreferenceRead)
+async def update_user_preference(
+    preference_id: int,
+    preference_update: UserSearchPreferenceUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    # get preference by id
+    query = select(UserSearchPreference).where(UserSearchPreference.id == preference_id)
+    result = await db.execute(query)
+    db_preference = result.scalars().first()
+    
+    if not db_preference:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Could not find search preference preset with that id"
+        )
+        
+    # update preference data
+    update_data = preference_update.model_dump(exclude_unset=True)
+    
+    for field, value in update_data.items():
+        setattr(db_preference, field, value)
+        
+    await db.commit()
     await db.refresh(db_preference)
     
     return db_preference
