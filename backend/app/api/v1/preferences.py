@@ -10,6 +10,19 @@ from app.schemas.user_preference import UserSearchPreferenceCreate, UserSearchPr
 
 router = APIRouter()
 
+@router.get("/user/{id}", response_model=list[UserSearchPreferenceRead], status_code=status.HTTP_200_OK)
+async def get_user_preference(
+    id: uuid.UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(UserSearchPreference).where(UserSearchPreference.user_id == id)
+    
+    results = await db.execute(query)
+    preferences = results.scalars().all()
+    
+    return preferences
+    
+
 @router.post("/", response_model=UserSearchPreferenceRead, status_code=status.HTTP_201_CREATED)
 async def create_user_preference(
     preference_payload: UserSearchPreferenceCreate,
