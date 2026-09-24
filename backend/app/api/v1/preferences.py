@@ -69,3 +69,23 @@ async def update_user_preference(
     await db.refresh(db_preference)
     
     return db_preference
+
+@router.delete("/{preference_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user_preference(
+    preference_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(UserSearchPreference).where(UserSearchPreference.id == preference_id)
+    result = await db.execute(query)
+    db_preference = result.scalars().first()
+    
+    if not db_preference:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Could not find search preference preset with that id"
+        )
+        
+    await db.delete(db_preference)
+    await db.commit()
+    
+    return None
