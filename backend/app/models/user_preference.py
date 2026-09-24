@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
-from sqlalchemy import Integer, ForeignKey, DateTime, func, Enum as SQLEnum
+from sqlalchemy import Integer, String, ForeignKey, DateTime, func, Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,6 +20,11 @@ class UserSearchPreference(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), 
         ForeignKey("users.id", ondelete="CASCADE"), 
+        nullable=False
+    )
+    
+    title: Mapped[str] = mapped_column(
+        String(255),
         nullable=False
     )
 
