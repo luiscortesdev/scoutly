@@ -28,3 +28,6 @@
    from app.schemas.program import ProgramRead
    CollegeReadDetailed.model_rebuild()
    ```
+4. Use standard Python 3.10+ native union types:
+    - Bad: Optional[str], Union[int, float]
+    - Good: str | None, int | float
