@@ -1,3 +1,8 @@
+---
+name: scraper-etl-safety
+description: Guidelines for asynchronously inserting data into the postgres database safely
+---
+
 # SKILL: scoutly-scraper-etl-safety
 
 ## Rules for Agents

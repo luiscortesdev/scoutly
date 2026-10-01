@@ -1,4 +1,9 @@
-# SKILL: scoutly-workspace-management
+---
+name: project-structure
+description: An overview of the project structure and architecture
+---
+
+# SKILL: scoutly-project-structure
 
 ## Context & Architecture
 Scoutly is a multi-package Python monorepo managed exclusively via `uv` workspaces.

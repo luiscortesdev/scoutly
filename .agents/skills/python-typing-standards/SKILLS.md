@@ -1,3 +1,8 @@
+---
+name: python-typing-standards
+description: Guidelines for creating proper, modern type annotations in python
+---
+
 # SKILL: scoutly-python-typing-standards
 
 ## Rules for Agents

@@ -1,4 +1,9 @@
-# SKILL: fastapi-project-structure
+---
+name: fastapi-project-guidelines
+description: Guidelines for creating new endpoints, querying data, and using the configuration in the fastapi backend
+---
+
+# SKILL: fastapi-project-guidelines
 
 ## Rules for Agents
 1. Router Aggregator Pattern:

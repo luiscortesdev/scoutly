@@ -1,3 +1,8 @@
+---
+name: pydantic-v2-schemas
+description: Guidelines for creating pydantic v2 schemas and when to make them
+---
+
 # SKILL: scoutly-pydantic-v2-schemas
 
 ## Context

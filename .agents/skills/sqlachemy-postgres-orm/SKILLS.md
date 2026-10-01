@@ -1,10 +1,15 @@
-### Skill 3: PostgreSQL 15 & SQLAlchemy 2.0 Async ORM Modeling
+---
+name: sqlalchemy-orm-postgres
+description: Guidelines for creating and working with sqlalchemy orm models
+---
+
+### Skill: PostgreSQL 17 & SQLAlchemy 2.0 Async ORM Modeling
 **Target:** `backend/app/models/`, database relationships, ENUM definitions.
 
 # SKILL: scoutly-sqlalchemy-async-orm
 
 ## Context
-PostgreSQL 15 running in Docker via `asyncpg`. Database schema uses strict 3NF with custom PostgreSQL ENUMs and ARRAY columns.
+PostgreSQL 17 running in Docker via `asyncpg`. Database schema uses strict 3NF with custom PostgreSQL ENUMs and ARRAY columns.
 
 ## Rules for Agents
 1. Centralized Declarative Base:
