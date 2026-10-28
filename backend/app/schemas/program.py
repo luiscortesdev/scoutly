@@ -35,7 +35,7 @@ class ProgramRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
 class ProgramReadDetailed(ProgramRead):
-    college: "CollegeRead"
+    college: CollegeRead
     events: list[ProgramEventRead] = []
     players: list[PlayerRead] = []
     
