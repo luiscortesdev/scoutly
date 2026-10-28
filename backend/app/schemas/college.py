@@ -49,9 +49,9 @@ class CollegeRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
     
-class CollegeReadWithProgram(CollegeRead):
-    programs: "list[ProgramRead]" = []
-    
+class CollegeReadDetailed(CollegeRead):
+    programs: list[ProgramRead] = []
+
 # fix circular imports
 from app.schemas.program import ProgramRead
-CollegeReadWithProgram.model_rebuild()
+CollegeReadDetailed.model_rebuild()

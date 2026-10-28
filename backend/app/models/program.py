@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import uuid
 from typing import TYPE_CHECKING
 from datetime import datetime
@@ -13,7 +11,7 @@ from app.models.enums import GenderType, DivisionType
 if TYPE_CHECKING:
     from app.models.college import College
     from app.models.player import Player
-    from backend.app.models.program_event import ProgramEvent
+    from app.models.program_event import ProgramEvent
 
 class Program(Base):
     __tablename__ = "programs"

@@ -5,11 +5,11 @@ from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
 from app.models.college import College
-from app.schemas.college import CollegeReadWithProgram
+from app.schemas.college import CollegeReadDetailed
 
 router = APIRouter()
 
-@router.get("/{college_id}", response_model=CollegeReadWithProgram)
+@router.get("/{college_id}", response_model=CollegeReadDetailed)
 async def get_college_details(
     college_id: int,
     db: AsyncSession = Depends(get_db)
